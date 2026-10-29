@@ -41,6 +41,14 @@ return [
         ],
     ],
 
+    // Nama dan logo aplikasi (opsional). Logo dan favicon ditaruh di public/brand/ (tidak ikut git),
+    // misalnya hasil: php bin/fetch-brand.php https://situs-anda.com
+    'brand' => [
+        'name' => 'CRM',
+        // 'logo' => '/brand/logo.png',
+        // 'favicon' => '/brand/favicon.png',
+    ],
+
     // Folder log, session, lock. Default: storage/ di root repo (di luar docroot).
     'storage_path' => dirname(__DIR__) . '/storage',
 ];

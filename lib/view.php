@@ -1,6 +1,29 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * Branding aplikasi dari config server (nama, logo, favicon). File logo ada di public/brand/ yang tidak ikut git,
+ * supaya repo public tidak memuat nama atau aset bisnis.
+ */
+function brand(string $key): ?string
+{
+    $defaults = ['name' => 'CRM', 'logo' => null, 'favicon' => null];
+    $value = config('brand.' . $key, $defaults[$key] ?? null);
+    if (in_array($key, ['logo', 'favicon'], true)) {
+        // Hanya file di public/brand/ yang benar-benar ada.
+        if (!is_string($value) || !preg_match('#^/brand/[A-Za-z0-9._-]+$#', $value) || !is_file(ROOT . '/public' . $value)) {
+            return null;
+        }
+    }
+    return $value === null ? null : (string) $value;
+}
+
+function brand_head(): string
+{
+    $fav = brand('favicon') ?? brand('logo');
+    return $fav ? '<link rel="icon" href="' . e($fav) . '">' : '';
+}
+
 function e(mixed $value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

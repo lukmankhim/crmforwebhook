@@ -64,6 +64,11 @@ code, .code, pre { font-family: var(--mono); font-size: 0.875em; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
 }
 .brand { display: flex; flex-direction: column; text-decoration: none; color: var(--ink); margin-right: auto; min-height: 44px; justify-content: center; }
+.brand { flex-direction: row; align-items: center; gap: 12px; }
+.brand__text { display: flex; flex-direction: column; }
+.brand__logo { height: 32px; width: auto; max-width: 140px; object-fit: contain; }
+.brand__app { font-weight: 700; color: var(--accent); padding-right: 12px; border-right: 1px solid var(--line); }
+.bare__logo { height: 40px; width: auto; max-width: 200px; object-fit: contain; display: block; }
 .brand__tenant { font-weight: 650; font-size: 1.05rem; }
 .brand__kind { font-size: 0.78rem; color: var(--muted); }
 .switcher, .usermenu { display: flex; align-items: center; gap: 8px; }

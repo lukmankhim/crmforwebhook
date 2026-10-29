@@ -7,4 +7,6 @@ storage/imports/*
 storage/cache/*
 !storage/*/.gitkeep
 node_modules/
+public/brand/*
+!public/brand/.gitkeep
 storage/test/

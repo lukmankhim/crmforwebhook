@@ -22,7 +22,8 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= e($title ?? 'CRM') ?><?= $tenant ? ' · ' . e($tenant['name']) : '' ?></title>
+<title><?= e($title ?? brand('name')) ?><?= $tenant ? ' · ' . e($tenant['name']) : '' ?> · <?= e(brand('name')) ?></title>
+<?= brand_head() ?>
 <link rel="stylesheet" href="/assets/app.css">
 <script src="/assets/app.js" defer></script>
 </head>
@@ -31,8 +32,11 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 <header class="app-header">
   <div class="app-header__row">
     <a class="brand" href="/">
-      <span class="brand__tenant"><?= e($tenant['name'] ?? 'Belum ada tenant') ?></span>
-      <?php if ($tenant): ?><span class="brand__kind"><?= $tenant['kind'] === 'client' ? 'Client' : 'Bisnis sendiri' ?></span><?php endif; ?>
+      <?php if (brand('logo')): ?><img class="brand__logo" src="<?= e(brand('logo')) ?>" alt="<?= e(brand('name')) ?>"><?php else: ?><span class="brand__app"><?= e(brand('name')) ?></span><?php endif; ?>
+      <span class="brand__text">
+        <span class="brand__tenant"><?= e($tenant['name'] ?? 'Belum ada tenant') ?></span>
+        <?php if ($tenant): ?><span class="brand__kind"><?= $tenant['kind'] === 'client' ? 'Client' : 'Bisnis sendiri' ?></span><?php endif; ?>
+      </span>
     </a>
     <?php if ($allTenants): ?>
       <form class="switcher" method="post" action="/switch-tenant">

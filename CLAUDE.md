@@ -19,6 +19,10 @@ Repo ini public: jangan tulis nama tenant, nama client, domain bisnis, atau data
 - Fase 3 sudah dibangun: framework integrasi per tenant (opsional) di `lib/integrations.php`, konektor GA4 dan Search Console, cron `cron/sync.php`, pengaturan di `/settings/integrations`, halaman `/sources`. Diuji dengan `tests/mock-google.php`, belum dengan akun Google sungguhan.
 - Fase 4 dan 5 belum. Provider baru (Google Ads, Meta) ditambahkan di `integration_providers()`. Kerjakan satu fase per satu, tiap fase harus bisa dipakai.
 
+## Branding
+
+Nama aplikasi, logo, dan favicon diatur lewat `brand` di `config/config.php` server, file aset di `public/brand/` (di-ignore git). Jangan menulis nama atau aset bisnis di kode.
+
 ## Aturan kode
 
 - PHP 8.3 native tanpa framework, server-rendered, JS minimal (`public/assets/app.js`).

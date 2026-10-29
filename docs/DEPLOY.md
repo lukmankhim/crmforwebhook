@@ -128,6 +128,17 @@ sudo chmod 600 /etc/crm/google-service-account.json
 
 File JSON jangan pernah di-commit, dikirim lewat chat, atau ditaruh di `public/`.
 
+## Nama dan logo aplikasi (opsional)
+
+Nama dan logo diatur di server, tidak di repo. Ambil logo dan favicon dari situs bisnis:
+
+```bash
+cd /var/www/crm
+sudo -u www-data php bin/fetch-brand.php https://situs-anda.com --name="Nama CRM"
+```
+
+Script menyimpan file ke `public/brand/` (tidak ikut git), menolak file yang bukan gambar, lebih dari 1MB, atau SVG yang berisi script. Lalu ia mencetak potongan `'brand' => [...]` untuk ditempel ke `config/config.php`. Kalau logo tidak ketemu otomatis, taruh file logo manual di `public/brand/` dan isi path-nya di config.
+
 ## Pakai pertama kali
 
 1. Login superadmin, buat tenant (misalnya `bisnis-a`, `client-b`) di menu Tenant.
