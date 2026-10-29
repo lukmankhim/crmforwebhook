@@ -54,4 +54,6 @@ require __DIR__ . '/leads.php';
 require __DIR__ . '/dashboard.php';
 require __DIR__ . '/import.php';
 require __DIR__ . '/ingest.php';
+require __DIR__ . '/google.php';
+require __DIR__ . '/integrations.php';
 require __DIR__ . '/notify.php';

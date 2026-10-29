@@ -32,6 +32,15 @@ return [
         'chat_id'   => '',
     ],
 
+    // Integrasi Google (opsional, Fase 3). Satu service account bisa dipakai banyak tenant:
+    // tiap klien cukup menambahkan email service account di GA4 / Search Console mereka.
+    // File JSON disimpan di luar folder aplikasi, chmod 600, pemilik www-data. Jangan pernah commit.
+    'google' => [
+        'credentials' => [
+            // 'default' => '/etc/crm/google-service-account.json',
+        ],
+    ],
+
     // Folder log, session, lock. Default: storage/ di root repo (di luar docroot).
     'storage_path' => dirname(__DIR__) . '/storage',
 ];

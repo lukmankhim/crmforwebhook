@@ -67,6 +67,7 @@ sudo crontab -u www-data /var/www/crm/deploy/crontab
 ```
 
 - `ingest-worker.php` tiap menit: mengubah webhook yang masuk jadi lead, coba ulang dengan jeda 1, 5, 15, 60 menit, gagal ke-5 kirim Telegram.
+- `sync.php` tiap menit: hanya menjalankan integrasi yang aktif dan sudah 60 menit sejak sync terakhir (atau diminta lewat tombol Sync sekarang).
 - `cleanup.php` tiap jam: hapus payload mentah lebih dari 30 hari, counter rate limit, dan session lama.
 
 ## 8. fail2ban
@@ -96,6 +97,36 @@ sudo mysql -e "DROP DATABASE crm_restore_test"
 ```
 
 Catat tanggal tes restore terakhir.
+
+## Integrasi Google (opsional, bisa kapan saja)
+
+GA4 dan Search Console memakai **satu service account** untuk semua tenant. Klien tidak memasang apa pun, cukup memberi akses ke email service account. Tenant yang tidak menyambungkan integrasi tetap jalan normal.
+
+1. Di Google Cloud Console: buat project, aktifkan **Google Analytics Data API** dan **Google Search Console API**.
+2. IAM, Service Accounts, buat service account (tanpa role project), lalu Keys, Add key, JSON. File JSON terunduh.
+3. Upload file itu ke server di luar folder aplikasi, lalu kunci aksesnya:
+
+```bash
+sudo mkdir -p /etc/crm
+sudo mv google-service-account.json /etc/crm/
+sudo chown www-data:www-data /etc/crm/google-service-account.json
+sudo chmod 600 /etc/crm/google-service-account.json
+```
+
+4. Daftarkan di `config/config.php`:
+
+```php
+'google' => [
+    'credentials' => [
+        'default' => '/etc/crm/google-service-account.json',
+    ],
+],
+```
+
+5. Per tenant: Pengaturan, Integrasi. Halaman itu menampilkan email service account. Klien menambahkan email itu sebagai Viewer di GA4 (Admin, Property access management) dan sebagai user di Search Console. Lalu isi Property ID / properti Search Console, simpan, dan klik Tes koneksi.
+6. Cron `sync.php` menarik 90 hari ke belakang saat pertama kali, lalu tiap 60 menit menarik beberapa hari terakhir. Gagal 2x berturut-turut mengirim notifikasi Telegram.
+
+File JSON jangan pernah di-commit, dikirim lewat chat, atau ditaruh di `public/`.
 
 ## Pakai pertama kali
 
@@ -135,6 +166,22 @@ Butuh PHP 8.3, MySQL 8, Node + Playwright.
 cp config/config.example.php config/config.php   # isi DB lokal, env=development, app_url=http://127.0.0.1:8080
 CRM_ALLOW_RESET=yes SUPER_PASS='password-uji-123' tests/reset-local.sh
 php -S 127.0.0.1:8080 -t public bin/dev-router.php
+```
+
+Untuk tes integrasi Google tanpa akun Google sungguhan, pakai server tiruan dan service account palsu:
+
+```bash
+php tests/make-fake-sa.php
+php -S 127.0.0.1:8090 tests/mock-google.php
+```
+
+Lalu tambahkan di `config/config.php` lokal (path dari output `make-fake-sa.php`):
+
+```php
+'google' => [
+    'credentials' => ['default' => '/path/ke/storage/test/fake-sa.json', 'rusak' => '/tidak/ada.json'],
+    'endpoints' => ['token' => 'http://127.0.0.1:8090/token', 'ga4' => 'http://127.0.0.1:8090/ga4', 'gsc' => 'http://127.0.0.1:8090/gsc'],
+],
 ```
 
 Di terminal lain:

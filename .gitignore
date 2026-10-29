@@ -4,5 +4,7 @@ storage/sessions/*
 storage/locks/*
 storage/exports/*
 storage/imports/*
+storage/cache/*
 !storage/*/.gitkeep
 node_modules/
+storage/test/

@@ -8,6 +8,8 @@ require ROOT . '/lib/pages/leads.php';
 require ROOT . '/lib/pages/import.php';
 require ROOT . '/lib/pages/settings.php';
 require ROOT . '/lib/pages/ingest.php';
+require ROOT . '/lib/pages/integrations.php';
+require ROOT . '/lib/pages/sources.php';
 require ROOT . '/lib/pages/account.php';
 require ROOT . '/lib/pages/super.php';
 
@@ -63,6 +65,10 @@ $routes = [
     ['POST', '#^/settings/users/(\d+)$#', 'page_settings_users_update', 'settings'],
     ['GET',  '#^/settings/pipeline$#', 'page_settings_pipeline', 'settings'],
     ['POST', '#^/settings/pipeline$#', 'page_settings_pipeline_post', 'settings'],
+
+    ['GET',  '#^/sources$#', 'page_sources', 'leads.view'],
+    ['GET',  '#^/settings/integrations$#', 'page_integrations', 'settings'],
+    ['POST', '#^/settings/integrations$#', 'page_integrations_post', 'settings'],
 
     ['GET',  '#^/settings/ingest$#', 'page_ingest_index', 'settings'],
     ['POST', '#^/settings/ingest/keys$#', 'page_ingest_key_create', 'settings'],

@@ -278,12 +278,85 @@ async function waitNextStep() {
   const audit = await page.textContent('table');
   check('audit mencatat login, buat lead, ubah stage', ['login', 'lead_create', 'lead_stage', 'user_create'].every((a) => audit.includes(a)));
 
+  // 11b. Fase 3: integrasi opsional GA4 + Search Console (pakai tests/mock-google.php)
+  const openForm = async (prov) => {
+    const d = page.locator(`section:has(#int-${prov}) details.int-form`).first();
+    if (!(await d.evaluate((el) => el.open))) await d.locator('summary').click();
+  };
+  const runSync = () => execFileSync('php', [path.join(ROOT, 'cron/sync.php'), '-v'], { encoding: 'utf8' }).trim();
+  await page.goto(BASE + '/sources');
+  check('sumber: tanpa integrasi tampil belum tersambung', (await page.textContent('main')).includes('Google Analytics 4 belum tersambung'));
+  check('sumber: cron tidak menyentuh tenant tanpa integrasi', runSync() === '');
+  await page.click('a[href="/settings/integrations"]');
+  check('integrasi: email service account tampil untuk diberikan ke klien', (await page.textContent('main')).includes('crm-sync@uji-lokal.iam.gserviceaccount.com'));
+  await openForm('ga4');
+  await page.fill('#acc-ga4', 'bukan-angka');
+  await page.click('#acc-ga4 >> xpath=ancestor::form//button[@type="submit"]');
+  check('integrasi: property ID tidak valid ditolak', (await page.textContent('.flash--error')).includes('Property ID tidak valid'));
+  await openForm('ga4');
+  await page.fill('#acc-ga4', '403403');
+  await page.click('#acc-ga4 >> xpath=ancestor::form//button[@type="submit"]');
+  await page.click('section:has(#int-ga4) button:text-is("Tes koneksi")');
+  check('integrasi: tes koneksi tanpa akses memberi petunjuk', (await page.textContent('section:has(#int-ga4) .flash--error')).includes('belum diberi akses'));
+  await openForm('ga4');
+  await page.fill('#acc-ga4', 'properties/123456789');
+  await page.click('#acc-ga4 >> xpath=ancestor::form//button[@type="submit"]');
+  await page.click('section:has(#int-ga4) button:text-is("Tes koneksi")');
+  check('integrasi: tes koneksi GA4 berhasil', (await page.textContent('section:has(#int-ga4) .flash--success')).includes('Sesi kemarin menurut GA4: 42'));
+  check('integrasi: format properties/123 dinormalisasi', (await page.textContent('section:has(#int-ga4) dl')).includes('123456789'));
+  await openForm('gsc');
+  await page.fill('#acc-gsc', 'sc-domain:contoh.com');
+  await page.click('#acc-gsc >> xpath=ancestor::form//button[@type="submit"]');
+  let syncOut = runSync();
+  check('sync: backfill 90 hari GA4 (180 baris)', syncOut.includes('provider=ga4 rows=180'), syncOut);
+  check('sync: backfill GSC per halaman + query', /provider=gsc rows=\d+/.test(syncOut), syncOut);
+  check('sync: tidak jalan lagi sebelum 60 menit', runSync() === '');
+  await page.goto(BASE + '/settings/integrations');
+  check('integrasi: status Aktif dan riwayat sync berhasil', (await page.textContent('section:has(#int-ga4) .status')).includes('Aktif') && (await page.$$('.table .status--processed')).length >= 2);
+  await page.click('section:has(#int-ga4) button:text-is("Sync sekarang")');
+  syncOut = runSync();
+  check('sync: tombol Sync sekarang menjadwalkan ulang, upsert tanpa dobel', syncOut.includes('provider=ga4 rows=8'), syncOut);
+
+  await page.goto(BASE + '/sources');
+  const stile = async (label) => (await page.locator('.tile').filter({ has: page.locator('.tile__label', { hasText: new RegExp('^' + label + '$') }) }).locator('.tile__value').textContent()).trim();
+  check('sumber: sesi 30 hari = 450 (tidak dobel setelah sync ulang)', (await stile('Sesi')) === '450', await stile('Sesi'));
+  check('sumber: key events 30 hari = 90', (await stile('Key events \\(konversi GA4\\)')) === '90');
+  check('sumber: dibanding periode lalu', (await page.textContent('main')).includes('+0% dari 450') || (await page.textContent('main')).includes('0% dari 450'));
+  check('sumber: tabel source/medium', (await page.textContent('main')).includes('google / organic'));
+  check('sumber: klik GSC dari total per halaman (140)', (await stile('Klik')) === '140', await stile('Klik'));
+  check('sumber: posisi rata-rata tertimbang impresi (7,3)', (await stile('Posisi rata-rata')) === '7,3', await stile('Posisi rata-rata'));
+  check('sumber: tabel kata kunci', (await page.textContent('main')).includes('kata a'));
+  await page.click('.segmented a:text-is("7 hari")');
+  check('sumber: periode 7 hari (sesi 105)', (await stile('Sesi')) === '105', await stile('Sesi'));
+
+  // Gagal 2x berturut-turut: notifikasi Telegram (tercatat di notify.log karena bot belum dikonfigurasi)
+  await page.goto(BASE + '/settings/integrations');
+  await openForm('ga4');
+  await page.fill('#acc-ga4', '403403');
+  await page.click('#acc-ga4 >> xpath=ancestor::form//button[@type="submit"]');
+  runSync();
+  await page.click('section:has(#int-ga4) button:text-is("Sync sekarang")');
+  runSync();
+  const notifyLog = require('fs').readFileSync(path.join(ROOT, 'storage/logs/notify.log'), 'utf8');
+  check('sync: gagal 2x berturut-turut memicu notifikasi', notifyLog.includes('Sync gagal 2x berturut-turut'));
+  await page.goto(BASE + '/settings/integrations');
+  check('integrasi: status Error dan pesan tampil', (await page.textContent('section:has(#int-ga4) .status')).includes('Error') && (await page.textContent('section:has(#int-ga4)')).includes('belum diberi akses'));
+  await page.click('section:has(#int-ga4) button:text-is("Jeda")');
+  await page.click('section:has(#int-ga4) button:text-is("Sync sekarang")').catch(() => {});
+  check('integrasi: dijeda tidak disinkron', runSync() === '' && (await page.textContent('section:has(#int-ga4) .status')).includes('Dijeda'));
+  await page.click('section:has(#int-gsc) summary:text-is("Putuskan sambungan")');
+  await page.check('section:has(#int-gsc) input[name="delete_data"]');
+  await page.click('section:has(#int-gsc) button:text-is("Putuskan")');
+  await page.goto(BASE + '/sources');
+  check('integrasi: putus + hapus data, GSC kembali belum tersambung', (await page.textContent('main')).includes('Search Console belum tersambung'));
+  check('integrasi: GA4 dijeda, data lama tetap tampil', (await stile('Sesi')) === '450');
+
   // 12. Mobile
   const m = await browser.newContext({ viewport: { width: 375, height: 800 }, isMobile: true });
   const mp = await m.newPage();
   mp.on('console', (msg) => { if (msg.type() === 'error') consoleErrors.push('[mobile] ' + msg.text()); });
   await m.addCookies(await ctx.cookies());
-  for (const p of ['/', '/?days=90', '/leads?view=kanban', '/leads/import', '/leads', leadUrl.replace(BASE, ''), '/settings/users', '/settings/pipeline', '/settings/ingest', sourceUrl.replace(BASE, ''), '/tenants', '/audit', '/account']) {
+  for (const p of ['/', '/?days=90', '/sources', '/settings/integrations', '/leads?view=kanban', '/leads/import', '/leads', leadUrl.replace(BASE, ''), '/settings/users', '/settings/pipeline', '/settings/ingest', sourceUrl.replace(BASE, ''), '/tenants', '/audit', '/account']) {
     await mp.goto(BASE + p);
     await noOverflow(mp, p);
   }
@@ -304,6 +377,10 @@ async function waitNextStep() {
   check('tombol import tidak tampil untuk sales', (await sp.$('a[href="/leads/import"]')) === null);
   resp = await sp.goto(BASE + '/settings/users');
   check('sales tidak bisa buka pengaturan (403)', resp.status() === 403);
+  resp = await sp.goto(BASE + '/settings/integrations');
+  check('sales tidak bisa buka pengaturan integrasi (403)', resp.status() === 403);
+  resp = await sp.goto(BASE + '/sources');
+  check('sales bisa lihat halaman Sumber', resp.status() === 200 && (await sp.textContent('main')).includes('google / organic'));
   resp = await sp.goto(BASE + '/audit');
   check('sales tidak bisa buka audit (403)', resp.status() === 403);
   check('menu sales tidak menampilkan link yang tidak boleh diakses', !(await sp.$('a[href="/settings"]')) && !(await sp.$('a[href="/tenants"]')));
@@ -318,6 +395,8 @@ async function waitNextStep() {
   check('lead tenant lain tidak bisa dibuka setelah pindah tenant (404)', resp.status() === 404);
   await page.goto(BASE + '/leads');
   check('daftar lead tenant baru kosong', (await page.textContent('.empty')).includes('Belum ada lead'));
+  await page.goto(BASE + '/sources');
+  check('data GA4 tenant lain tidak bocor ke tenant baru', (await page.textContent('main')).includes('Google Analytics 4 belum tersambung'));
 
   // 14. CSRF
   const csrfResp = await sp.request.post(BASE + '/leads', { form: { phone: '081200001111' } });

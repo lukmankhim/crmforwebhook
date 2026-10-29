@@ -9,6 +9,6 @@ if [ "${CRM_ALLOW_RESET:-}" != "yes" ]; then
   exit 1
 fi
 mysql -uroot -e "DROP DATABASE IF EXISTS \`$DB\`; CREATE DATABASE \`$DB\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-rm -f storage/sessions/sess_*
+rm -f storage/sessions/sess_* storage/logs/notify.log storage/cache/google-token-*
 php bin/migrate.php
 CRM_SUPERADMIN_PASSWORD="$SUPER_PASS" php bin/create-superadmin.php "${SUPER_USER:-admin}" "Superadmin"

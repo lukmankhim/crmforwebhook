@@ -266,6 +266,13 @@ tr.is-off td { color: var(--muted); }
 .kcard__move select { flex: 1 1 100%; }
 .kcard__move select { min-height: 44px; padding: 6px 8px; font-size: 0.85rem; }
 
+.page-head--card { margin-bottom: 8px; align-items: center; }
+.page-head--card h2 { margin: 0; }
+.tiles--compact { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 16px; }
+.subhead { font-size: 0.95rem; margin: 20px 0 8px; }
+.int-form { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 4px; }
+.int-form summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; color: var(--accent); font-weight: 550; }
+
 @media (max-width: 960px) {
   .tiles { grid-template-columns: 1fr 1fr; }
   .tile--focus { grid-column: 1 / -1; }
@@ -281,7 +288,7 @@ tr.is-off td { color: var(--muted); }
   .container { padding-top: 16px; }
   .table--cards, .table--cards tbody, .table--cards tr, .table--cards td { display: block; width: 100%; }
   .table--cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .table--cards { border: 0; background: transparent; }
+  .table--cards { border: 0; background: transparent; position: relative; overflow: hidden; }
   .table--cards tr { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 10px; padding: 6px 0; }
   .table--cards td { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; border: 0; padding: 6px 12px; }
   .table--cards td::before { content: attr(data-label); color: var(--muted); font-size: 0.8rem; padding-top: 2px; }
