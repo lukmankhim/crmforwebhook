@@ -130,7 +130,7 @@ File JSON jangan pernah di-commit, dikirim lewat chat, atau ditaruh di `public/`
 
 ## Nama dan logo aplikasi (opsional)
 
-Nama dan logo diatur di server, tidak di repo. Ambil logo dan favicon dari situs bisnis:
+Bawaannya TumpuCRM (logo dan favicon di `public/assets/brand/`, aksen `#357a4e`), tanpa perlu config apa pun. Kalau satu server mau memakai nama dan logo lain, ambil dari situs bisnisnya:
 
 ```bash
 cd /var/www/crm

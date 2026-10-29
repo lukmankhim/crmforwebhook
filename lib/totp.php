@@ -70,7 +70,7 @@ function totp_verify(string $secret, string $code, ?int $lastStep = null): ?int
 
 function totp_uri(string $secret, string $account): string
 {
-    $issuer = brand('name') ?? 'CRM';
+    $issuer = brand('name') ?? 'TumpuCRM';
     return 'otpauth://totp/' . rawurlencode($issuer . ':' . $account)
         . '?secret=' . $secret . '&issuer=' . rawurlencode($issuer) . '&digits=6&period=30';
 }

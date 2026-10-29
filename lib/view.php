@@ -2,16 +2,16 @@
 declare(strict_types=1);
 
 /**
- * Branding aplikasi dari config server (nama, logo, favicon). File logo ada di public/brand/ yang tidak ikut git,
- * supaya repo public tidak memuat nama atau aset bisnis.
+ * Branding aplikasi. Bawaannya TumpuCRM (aset di public/assets/brand/). Server bisa menimpa nama, logo, dan
+ * favicon lewat brand di config, dengan file di public/brand/ yang tidak ikut git.
  */
 function brand(string $key): ?string
 {
-    $defaults = ['name' => 'CRM', 'logo' => null, 'favicon' => null];
+    $defaults = ['name' => 'TumpuCRM', 'logo' => '/assets/brand/logo.svg', 'favicon' => '/assets/brand/favicon.png'];
     $value = config('brand.' . $key, $defaults[$key] ?? null);
     if (in_array($key, ['logo', 'favicon'], true)) {
-        // Hanya file di public/brand/ yang benar-benar ada.
-        if (!is_string($value) || !preg_match('#^/brand/[A-Za-z0-9._-]+$#', $value) || !is_file(ROOT . '/public' . $value)) {
+        // Hanya file di public/brand/ atau public/assets/brand/ yang benar-benar ada.
+        if (!is_string($value) || !preg_match('#^/(assets/)?brand/[A-Za-z0-9._-]+$#', $value) || !is_file(ROOT . '/public' . $value)) {
             return null;
         }
     }

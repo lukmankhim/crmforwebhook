@@ -234,7 +234,7 @@ if ($theme) {
     echo "\nWarna tema situs (theme-color): {$theme}\n";
 }
 
-$nameLine = var_export($name ?? 'CRM', true);
+$nameLine = var_export($name ?? 'TumpuCRM', true);
 echo "\nTempel ke config/config.php:\n\n";
 echo "    'brand' => [\n";
 echo "        'name' => {$nameLine},\n";

@@ -41,10 +41,10 @@ return [
         ],
     ],
 
-    // Nama dan logo aplikasi (opsional). Logo dan favicon ditaruh di public/brand/ (tidak ikut git),
-    // misalnya hasil: php bin/fetch-brand.php https://situs-anda.com
+    // Branding (opsional). Bawaannya TumpuCRM. Isi hanya kalau server ini memakai nama atau logo lain;
+    // file ditaruh di public/brand/ (tidak ikut git), misalnya hasil: php bin/fetch-brand.php https://situs-anda.com
     'brand' => [
-        'name' => 'CRM',
+        // 'name' => 'Nama CRM',
         // 'logo' => '/brand/logo.png',
         // 'favicon' => '/brand/favicon.png',
         // Warna aksen (hex). Kalau kontrasnya kurang dari 4,5:1, otomatis digelapkan.

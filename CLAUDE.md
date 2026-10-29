@@ -2,7 +2,9 @@
 
 Aplikasi CRM multi-tenant + lead funnel. Cara pasang di `docs/DEPLOY.md`.
 
-Repo ini public: jangan tulis nama tenant, nama client, domain bisnis, atau data pribadi di kode, dokumen, contoh, maupun test. Pakai contoh netral (`bisnis-a`, `contoh.com`).
+Aplikasi ini TumpuCRM, produk TumpuPress. Nama, logo, dan warna TumpuPress boleh ada di repo.
+
+Repo ini public: jangan tulis nama tenant, nama client, domain client, atau data pribadi di kode, dokumen, contoh, maupun test. Pakai contoh netral (`bisnis-a`, `contoh.com`).
 
 ## Rencana fase
 
@@ -21,7 +23,7 @@ Repo ini public: jangan tulis nama tenant, nama client, domain bisnis, atau data
 
 ## Branding
 
-Nama aplikasi, logo, dan favicon diatur lewat `brand` di `config/config.php` server, file aset di `public/brand/` (di-ignore git). Jangan menulis nama atau aset bisnis di kode.
+Bawaannya TumpuCRM: logo dan favicon di `public/assets/brand/`, warna aksen `#357a4e` (`--hijau-aksen` situs TumpuPress) di `public/assets/app.css`. Server bisa menimpa nama, logo, favicon, dan aksen lewat `brand` di `config/config.php`, file aset server di `public/brand/` (di-ignore git). Nama dan aset client tidak boleh ditulis di kode.
 
 ## Aturan kode
 
