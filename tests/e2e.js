@@ -185,6 +185,79 @@ async function waitNextStep() {
   await page.goto(BASE + '/leads?q=tidakada');
   check('empty state saat filter tanpa hasil', (await page.textContent('.empty')).includes('Tidak ada lead'));
 
+  // 9b. Fase 2: kanban
+  await page.goto(BASE + '/leads?view=kanban');
+  check('kanban menampilkan kolom per stage', (await page.$$('.kanban__col')).length === 6);
+  const citraCard = page.locator('.kcard', { hasText: 'Citra' });
+  await citraCard.locator('select').selectOption('dihubungi');
+  await citraCard.locator('button').click();
+  check('pindah kartu kanban tetap di kanban', page.url().includes('view=kanban'), page.url());
+  check('kartu pindah ke kolom Dihubungi', await page.locator('#col-dihubungi').locator('xpath=..').locator('.kcard', { hasText: 'Citra' }).count() === 1);
+  check('kolom lost tidak punya tombol pindah', await page.locator('.kanban__col--lost form').count() === 0);
+
+  // 9c. Fase 2: import CSV
+  const d = (n) => { const t = new Date(Date.now() - n * 86400000); return t; };
+  const dmy = (t) => `${String(t.getDate()).padStart(2, '0')}/${String(t.getMonth() + 1).padStart(2, '0')}/${t.getFullYear()}`;
+  const ymd = (t) => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+  const csv = [
+    'Nama;No HP;Status;Tanggal;Nilai deal',
+    `Gita;0812 5555 0001;Closing;${dmy(d(14))};12.500.000`,
+    'Hadi;6,28126E+12;Baru;;',
+    `Ika;081255550002;tidak ada;${ymd(d(9))};`,
+    'Gita lagi;0812-5555-0001;;;',
+    'Andi lama;6281211112222;;;',
+  ].join('\r\n');
+  await page.goto(BASE + '/leads');
+  await page.click('a[href="/leads/import"]');
+  await page.setInputFiles('#file', { name: 'leads-lama.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await page.click('form[action="/leads/import"] button');
+  check('import: halaman pasangkan kolom terbuka', page.url().endsWith('/leads/import/map'));
+  check('import: pemisah titik koma dikenali (5 kolom)', (await page.$$('select[name^="col["]')).length === 5);
+  check('import: kolom nomor ditebak otomatis', (await page.inputValue('#col-1')) === 'phone');
+  check('import: kolom nama, stage, tanggal, nilai ditebak', (await page.inputValue('#col-0')) === 'name' && (await page.inputValue('#col-2')) === 'stage' && (await page.inputValue('#col-3')) === 'created_at' && (await page.inputValue('#col-4')) === 'deal_value');
+  await page.selectOption('#col-0', 'phone');
+  await page.click('form[action="/leads/import/run"] button');
+  check('import: field ganda ditolak', (await page.textContent('.flash--error')).includes('lebih dari satu kolom'));
+  await page.selectOption('#col-0', 'name');
+  await page.click('form[action="/leads/import/run"] button');
+  const res = await page.textContent('main');
+  const num = (label) => { const m = res.match(new RegExp(label + '\\s*(\\d+)')); return m ? Number(m[1]) : -1; };
+  check('import: 2 lead baru tersimpan', num('Lead baru tersimpan') === 2, String(num('Lead baru tersimpan')));
+  check('import: nomor yang sudah ada dilewati', num('Dilewati, nomor sudah ada') === 1);
+  check('import: nomor dobel di file dilewati', num('Dilewati, nomor dobel di file') === 1);
+  check('import: nomor tidak valid dilewati dengan nomor baris', num('Dilewati, nomor tidak valid') === 1 && res.includes('Baris dengan nomor tidak valid: 3'));
+  check('import: petunjuk format 6,28E+12 tampil', res.includes('6,28E+12'));
+  check('import: stage tidak dikenal dilaporkan', num('Stage tidak dikenal \\(masuk stage awal\\)') === 1);
+  await page.goto(BASE + '/leads?source=import');
+  check('import: lead hasil import bersumber Import', (await page.$$('.table tbody tr')).length === 2);
+  await page.click('.rowlink:text-is("Gita")');
+  check('import: stage Closing dan nilai deal terbawa', (await page.textContent('.page-head .stage__label')).trim() === 'Closing' && (await page.inputValue('#deal_value')) === '12500000');
+  await page.goto(BASE + '/leads/import');
+  await page.setInputFiles('#file', { name: 'batal.csv', mimeType: 'text/csv', buffer: Buffer.from('hp\n081200000000') });
+  await page.click('form[action="/leads/import"] button');
+  await page.click('form[action="/leads/import/cancel"] button');
+  check('import: batal menghapus file dan kembali ke upload', page.url().endsWith('/leads/import') && (await page.textContent('.flash--info')).includes('dibatalkan'));
+  await page.setInputFiles('#file', { name: 'data.xlsx', mimeType: 'application/octet-stream', buffer: Buffer.from('xx') });
+  await page.click('form[action="/leads/import"] button');
+  check('import: file selain CSV ditolak', (await page.textContent('.flash--error')).includes('.csv'));
+
+  // 9d. Fase 2: ringkasan
+  await page.click('.mainnav a[href="/"]');
+  const tile = async (label) => (await page.locator('.tile').filter({ has: page.locator('.tile__label', { hasText: new RegExp('^' + label + '$') }) }).locator('.tile__value').textContent()).trim();
+  check('ringkasan: lead masuk 30 hari = 4', (await tile('Lead masuk')) === '4', await tile('Lead masuk'));
+  check('ringkasan: closing 30 hari = 1', (await tile('Closing')) === '1');
+  check('ringkasan: nilai closing dari data', (await tile('Nilai closing')) === 'Rp 12.500.000');
+  check('ringkasan: konversi lead ke closing 25%', (await tile('Lead jadi closing')) === '25,0%');
+  check('ringkasan: grafik 30 kolom hari', (await page.$$('.chart__hit')).length === 30);
+  check('ringkasan: tooltip kolom berisi tanggal dan jumlah', /\d{2} \w{3}: \d+ lead/.test(await page.locator('.chart__hit').first().locator('title').textContent()));
+  await page.click('.chart-table summary');
+  check('ringkasan: tabel alternatif grafik bisa dibuka', await page.isVisible('.chart-table table'));
+  check('ringkasan: tidak menampilkan angka spend/CPL tanpa data', !(await page.textContent('.tiles')).includes('CPL'));
+  await page.click('.segmented a:text-is("7 hari")');
+  check('ringkasan: periode 7 hari mengubah angka (2 lead)', (await tile('Lead masuk')) === '2', await tile('Lead masuk'));
+  await page.click('.hbars__label:text-is("Closing")');
+  check('ringkasan: klik stage membuka daftar terfilter', page.url().includes('stage=closing') && (await page.$$('.table tbody tr')).length === 1);
+
   // 10. Pipeline
   await page.goto(BASE + '/settings/pipeline');
   await page.fill('#new-label', 'Survey lokasi');
@@ -210,7 +283,7 @@ async function waitNextStep() {
   const mp = await m.newPage();
   mp.on('console', (msg) => { if (msg.type() === 'error') consoleErrors.push('[mobile] ' + msg.text()); });
   await m.addCookies(await ctx.cookies());
-  for (const p of ['/leads', leadUrl.replace(BASE, ''), '/settings/users', '/settings/pipeline', '/settings/ingest', sourceUrl.replace(BASE, ''), '/tenants', '/audit', '/account']) {
+  for (const p of ['/', '/?days=90', '/leads?view=kanban', '/leads/import', '/leads', leadUrl.replace(BASE, ''), '/settings/users', '/settings/pipeline', '/settings/ingest', sourceUrl.replace(BASE, ''), '/tenants', '/audit', '/account']) {
     await mp.goto(BASE + p);
     await noOverflow(mp, p);
   }
@@ -224,8 +297,12 @@ async function waitNextStep() {
   await sp.fill('#login', 'sales1');
   await sp.fill('#password', salesPass);
   await sp.click('button[type=submit]');
-  check('sales login tanpa 2FA', sp.url().endsWith('/leads'), sp.url());
-  let resp = await sp.goto(BASE + '/settings/users');
+  check('sales login tanpa 2FA', sp.url() === BASE + '/', sp.url());
+  let resp = await sp.goto(BASE + '/leads/import');
+  check('sales tidak bisa import CSV (403)', resp.status() === 403);
+  await sp.goto(BASE + '/leads');
+  check('tombol import tidak tampil untuk sales', (await sp.$('a[href="/leads/import"]')) === null);
+  resp = await sp.goto(BASE + '/settings/users');
   check('sales tidak bisa buka pengaturan (403)', resp.status() === 403);
   resp = await sp.goto(BASE + '/audit');
   check('sales tidak bisa buka audit (403)', resp.status() === 403);
@@ -256,7 +333,7 @@ async function waitNextStep() {
   await waitNextStep();
   await page.fill('#code', totp(secret));
   await page.click('form[action="/login/2fa"] button');
-  check('login dengan kode 2FA berhasil', page.url().endsWith('/leads'), page.url());
+  check('login dengan kode 2FA berhasil', page.url() === BASE + '/', page.url());
 
   check('tidak ada console error', consoleErrors.length === 0, consoleErrors.join(' | '));
   await browser.close();

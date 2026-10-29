@@ -4,6 +4,7 @@ $tenant = current_tenant();
 $nav = $nav ?? '';
 $navItems = [];
 if ($tenant && can('leads.view')) {
+    $navItems['dashboard'] = ['/', 'Ringkasan'];
     $navItems['leads'] = ['/leads', 'Leads'];
 }
 if ($tenant && can('settings')) {

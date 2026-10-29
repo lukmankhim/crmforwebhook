@@ -204,6 +204,74 @@ tr.is-off td { color: var(--muted); }
 .bare__brand { font-weight: 700; color: var(--accent); margin-bottom: 16px; }
 .bare__box form + form { margin-top: 8px; }
 
+/* Pilihan periode / tampilan */
+.segmented { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.segmented a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; color: var(--muted); text-decoration: none; white-space: nowrap; }
+.segmented a + a { border-left: 1px solid var(--line-strong); }
+.segmented a:hover { color: var(--ink); background: var(--paper); }
+.segmented a[aria-current="page"] { background: var(--ink); color: #fff; font-weight: 600; }
+.btn-row--center { justify-content: center; }
+
+/* Ringkasan: titik fokus di angka lead masuk dan grafik harian */
+.tiles { display: grid; grid-template-columns: 1.3fr repeat(3, 1fr); gap: 12px; margin-bottom: 8px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+.tile p { margin: 0; }
+.tile__label { font-size: 0.85rem; color: var(--muted); font-weight: 550; }
+.tile__value { font-size: 1.75rem; font-weight: 650; line-height: 1.2; margin: 4px 0 !important; overflow-wrap: anywhere; }
+.tile__note { font-size: 0.8rem; color: var(--muted); }
+.tile--focus { border-color: var(--accent); }
+.tile--focus .tile__value { font-size: 2.25rem; color: var(--accent); }
+.note-line { margin-bottom: var(--gap); }
+
+.chart-wrap { overflow-x: auto; }
+.chart { display: block; width: 100%; min-width: 800px; height: auto; overflow: visible; }
+.chart__grid { stroke: var(--line); stroke-width: 1; }
+.chart__base { stroke: var(--line-strong); stroke-width: 1; }
+.chart__axis { fill: var(--muted); font-size: 13px; font-family: var(--font); }
+.chart__bar { fill: var(--accent); }
+.chart__hit { fill: transparent; }
+.chart__col:hover .chart__hit { fill: var(--accent-soft); }
+.chart__col:hover .chart__bar { fill: #0a553f; }
+.chart-table { margin-top: 8px; }
+.chart-table summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; color: var(--accent); }
+.chart-table .table { max-width: 360px; margin-top: 8px; }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); align-items: start; }
+.split > .card { margin-bottom: var(--gap); }
+.hbars { list-style: none; margin: 0; padding: 0; }
+.hbars__row { display: grid; grid-template-columns: minmax(90px, 140px) 1fr 52px; align-items: center; gap: 10px; min-height: 36px; }
+.hbars__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbars__track { width: 100%; height: 10px; display: block; background: var(--paper); border-radius: 2px; }
+.hbars__bar { fill: var(--accent); }
+.hbars__row--lost .hbars__bar { fill: var(--line-strong); }
+.hbars__value { text-align: right; }
+.fu-list { list-style: none; margin: 0; padding: 0; }
+.fu-list li { display: flex; flex-direction: column; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.fu-list li:last-child { border-bottom: 0; }
+.plain-list { margin: 0 0 12px; padding-left: 18px; }
+.plain-list li + li { margin-top: 6px; }
+
+/* Kanban: scroll horizontal hanya di dalam papan, halaman tetap tidak melebar */
+.kanban { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(180px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 8px; align-items: start; }
+.kanban__col { background: #eceae2; border-radius: var(--radius); padding: 10px; min-width: 0; }
+.kanban__col--won { box-shadow: inset 0 3px 0 var(--accent); }
+.kanban__col--lost { box-shadow: inset 0 3px 0 var(--line-strong); }
+.kanban__head { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; margin: 0 0 8px; }
+.kanban__count { min-width: 44px; min-height: 32px; display: inline-flex; align-items: center; justify-content: flex-end; font-weight: 500; }
+.kanban__empty { color: var(--muted); font-size: 0.85rem; margin: 4px 0; }
+.kanban__more { display: inline-flex; min-height: 44px; align-items: center; font-size: 0.85rem; }
+.kcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; margin-bottom: 8px; }
+.kcard__meta { margin: 2px 0 0; font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+.kcard__move { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.kcard__move select { flex: 1 1 100%; }
+.kcard__move select { min-height: 44px; padding: 6px 8px; font-size: 0.85rem; }
+
+@media (max-width: 960px) {
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .tile--focus { grid-column: 1 / -1; }
+  .split { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 860px) {
   .detail-grid { grid-template-columns: 1fr; }
 }
@@ -222,4 +290,7 @@ tr.is-off td { color: var(--muted); }
   .switcher select { max-width: none; flex: 1; }
   .kv { grid-template-columns: 1fr; gap: 0; }
   .kv dd { margin-bottom: 8px; }
+  .kanban { grid-auto-flow: row; grid-auto-columns: auto; overflow: visible; }
+  .tiles { grid-template-columns: 1fr; }
+  .page-head .btn-row { width: 100%; }
 }

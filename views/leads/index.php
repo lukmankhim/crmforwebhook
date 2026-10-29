@@ -1,6 +1,10 @@
 <div class="page-head">
   <h1>Leads <span class="count"><?= number_format($total, 0, ',', '.') ?></span></h1>
-  <?php if (can('leads.edit')): ?><a class="btn btn-primary" href="/leads/new">Tambah lead</a><?php endif; ?>
+  <div class="btn-row">
+    <?= render_partial('leads/_viewtoggle', ['filters' => $filters]) ?>
+    <?php if (can('settings')): ?><a class="btn" href="/leads/import">Import CSV</a><?php endif; ?>
+    <?php if (can('leads.edit')): ?><a class="btn btn-primary" href="/leads/new">Tambah lead</a><?php endif; ?>
+  </div>
 </div>
 
 <form class="filters" method="get" action="/leads" role="search">
@@ -40,7 +44,7 @@
       <p><a href="/leads">Hapus filter</a></p>
     <?php else: ?>
       <p><strong>Belum ada lead di tenant ini.</strong></p>
-      <p class="muted">Lead masuk dari webhook (atur di Pengaturan, Webhook &amp; API) atau ditambah manual oleh sales.</p>
+      <p class="muted">Lead masuk dari webhook (atur di Pengaturan, Webhook &amp; API), import CSV, atau ditambah manual oleh sales.</p>
       <?php if (can('leads.edit')): ?><p><a class="btn btn-primary" href="/leads/new">Tambah lead pertama</a></p><?php endif; ?>
     <?php endif; ?>
   </div>

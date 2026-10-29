@@ -3,5 +3,6 @@ storage/logs/*
 storage/sessions/*
 storage/locks/*
 storage/exports/*
+storage/imports/*
 !storage/*/.gitkeep
 node_modules/

@@ -10,6 +10,7 @@ function page_leads_index(): void
         'stage' => (string) ($_GET['stage'] ?? ''),
         'source' => (string) ($_GET['source'] ?? ''),
         'mine' => ($_GET['mine'] ?? '') === '1' ? '1' : '',
+        'view' => ($_GET['view'] ?? '') === 'kanban' ? 'kanban' : '',
     ];
     $page = max(1, (int) ($_GET['page'] ?? 1));
     $stages = pipeline_stages();
@@ -29,7 +30,7 @@ function page_leads_index(): void
         }
         $params['qn'] = '%' . addcslashes($f['q'], '%_\\') . '%';
     }
-    if ($f['stage'] !== '' && isset($stages[$f['stage']])) {
+    if ($f['view'] !== 'kanban' && $f['stage'] !== '' && isset($stages[$f['stage']])) {
         $where[] = 'l.stage = :stage';
         $params['stage'] = $f['stage'];
     }
@@ -42,6 +43,11 @@ function page_leads_index(): void
         $params['me'] = (int) current_user()['id'];
     }
     $whereSql = implode(' AND ', $where);
+
+    if ($f['view'] === 'kanban') {
+        page_leads_kanban($f, $stages, $whereSql, $params);
+        return;
+    }
 
     $total = (int) q_tenant("SELECT COUNT(*) FROM leads l WHERE $whereSql", $params)->fetchColumn();
     $pages = max(1, (int) ceil($total / LEADS_PER_PAGE));
@@ -62,6 +68,42 @@ function page_leads_index(): void
         'pages' => $pages,
         'filtered' => $f['q'] !== '' || $f['stage'] !== '' || $f['source'] !== '' || $f['mine'] !== '',
     ]);
+}
+
+const KANBAN_PER_COLUMN = 30;
+
+/** Kanban per stage. Kartu dipindah lewat form (bisa keyboard, tanpa drag). Lost lewat halaman detail karena butuh alasan. */
+function page_leads_kanban(array $f, array $stages, string $whereSql, array $params): void
+{
+    $counts = [];
+    foreach (q_tenant("SELECT l.stage, COUNT(*) AS n FROM leads l WHERE $whereSql GROUP BY l.stage", $params) as $row) {
+        $counts[$row['stage']] = (int) $row['n'];
+    }
+    $columns = [];
+    foreach ($stages as $key => $s) {
+        $columns[$key] = empty($counts[$key]) ? [] : q_tenant("SELECT l.id, l.name, l.phone, l.stage, l.next_followup, l.quote_value, u.name AS assigned_name
+                       FROM leads l LEFT JOIN users u ON u.id = l.assigned_to
+                       WHERE $whereSql AND l.stage = :kstage ORDER BY COALESCE(l.touched_at, l.created_at) DESC, l.id DESC LIMIT :lim",
+            $params + ['kstage' => $key, 'lim' => KANBAN_PER_COLUMN])->fetchAll();
+    }
+    render('leads/kanban', [
+        'title' => 'Leads',
+        'nav' => 'leads',
+        'stages' => $stages,
+        'columns' => $columns,
+        'counts' => $counts,
+        'filters' => $f,
+        'total' => array_sum($counts),
+        'filtered' => $f['q'] !== '' || $f['source'] !== '' || $f['mine'] !== '',
+        'back' => url('/leads', $f),
+    ]);
+}
+
+/** Tujuan redirect setelah aksi: hanya halaman leads internal. */
+function safe_back(string $fallback): string
+{
+    $back = (string) ($_POST['back'] ?? '');
+    return preg_match('#^/leads(\?[A-Za-z0-9_=&%.+-]*)?$#', $back) ? $back : $fallback;
 }
 
 function page_leads_new(): void
@@ -150,8 +192,9 @@ function page_leads_stage(int $id): never
 {
     $lead = lead_or_404($id);
     $error = lead_change_stage($lead, str_input('stage', 40), (int) current_user()['id'], nullable_input('lost_reason', 255));
-    flash($error ? 'error' : 'success', $error ?: 'Stage diperbarui.');
-    redirect('/leads/' . $id);
+    flash($error ? 'error' : 'success', $error ?: 'Stage ' . ($lead['name'] ?: mask_phone($lead['phone'])) . ' diperbarui.');
+    header('Location: ' . safe_back('/leads/' . $id), true, 303);
+    exit;
 }
 
 function page_leads_note(int $id): never

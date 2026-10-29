@@ -18,6 +18,13 @@ foreach (glob(storage_path('sessions/sess_*')) ?: [] as $file) {
     }
 }
 
+// File import yang ditinggal di tengah jalan.
+foreach (glob(storage_path('imports/*.json')) ?: [] as $file) {
+    if (filemtime($file) < time() - 86400) {
+        @unlink($file);
+    }
+}
+
 if (in_array('-v', $argv, true)) {
     echo "payload_dihapus={$payloads} rate_limit_dihapus={$limits} session_dihapus={$sessions}\n";
 }

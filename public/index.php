@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/lib/bootstrap.php';
 require ROOT . '/lib/pages/auth.php';
+require ROOT . '/lib/pages/dashboard.php';
 require ROOT . '/lib/pages/leads.php';
+require ROOT . '/lib/pages/import.php';
 require ROOT . '/lib/pages/settings.php';
 require ROOT . '/lib/pages/ingest.php';
 require ROOT . '/lib/pages/account.php';
@@ -38,10 +40,16 @@ $routes = [
     ['POST', '#^/login/2fa-setup$#', 'page_2fa_setup_post', 'pending'],
     ['POST', '#^/logout$#', 'page_logout', 'public'],
 
-    ['GET',  '#^/$#', 'page_home', 'auth'],
+    ['GET',  '#^/$#', 'page_dashboard', 'leads.view'],
     ['GET',  '#^/leads$#', 'page_leads_index', 'leads.view'],
     ['GET',  '#^/leads/new$#', 'page_leads_new', 'leads.edit'],
     ['POST', '#^/leads$#', 'page_leads_create', 'leads.edit'],
+    ['GET',  '#^/leads/import$#', 'page_import_form', 'settings'],
+    ['POST', '#^/leads/import$#', 'page_import_upload', 'settings'],
+    ['GET',  '#^/leads/import/map$#', 'page_import_map', 'settings'],
+    ['POST', '#^/leads/import/run$#', 'page_import_run', 'settings'],
+    ['GET',  '#^/leads/import/result$#', 'page_import_result', 'settings'],
+    ['POST', '#^/leads/import/cancel$#', 'page_import_cancel', 'settings'],
     ['GET',  '#^/leads/(\d+)$#', 'page_leads_show', 'leads.view'],
     ['POST', '#^/leads/(\d+)$#', 'page_leads_update', 'leads.edit'],
     ['POST', '#^/leads/(\d+)/stage$#', 'page_leads_stage', 'leads.edit'],
@@ -140,10 +148,3 @@ function authorize(string $access): void
     }
 }
 
-function page_home(): never
-{
-    if (!has_tenant() && can('super')) {
-        redirect('/tenants');
-    }
-    redirect('/leads');
-}

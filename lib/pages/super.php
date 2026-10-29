@@ -74,7 +74,7 @@ function page_switch_tenant(): never
     audit('tenant_switch', 'tenant', $tenant['id']);
     $back = (string) ($_POST['back'] ?? '/leads');
     // Hanya path internal, dan halaman detail milik tenant lama tidak dibuka di tenant baru.
-    if (!preg_match('#^/(leads|settings(/[a-z]+)?|tenants|audit|account)$#', $back)) {
+    if (!preg_match('#^/(leads|settings(/[a-z]+)?|tenants|audit|account)?$#', $back)) {
         $back = '/leads';
     }
     redirect($back);

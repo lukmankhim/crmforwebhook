@@ -15,7 +15,8 @@ Repo ini public: jangan tulis nama tenant, nama client, domain bisnis, atau data
 ## Status
 
 - Fase 1 (fondasi) sudah dibangun: auth + 2FA, tenant, user, pipeline, lead (daftar, detail, input manual), audit log, endpoint webhook generik + worker, script backup.
-- Fase 2 sampai 5 belum. Kerjakan satu fase per satu, tiap fase harus bisa dipakai.
+- Fase 2 sudah dibangun: ringkasan di `/` (lead, closing, nilai, konversi, grafik harian, pipeline, follow up, per sumber), kanban di `/leads?view=kanban`, import CSV di `/leads/import` (khusus admin).
+- Fase 3 sampai 5 belum. Kerjakan satu fase per satu, tiap fase harus bisa dipakai.
 
 ## Aturan kode
 
