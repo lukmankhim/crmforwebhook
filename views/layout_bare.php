@@ -6,6 +6,7 @@
 <title><?= e($title ?? brand('name')) ?> · <?= e(brand('name')) ?></title>
 <?= brand_head() ?>
 <link rel="stylesheet" href="/assets/app.css">
+<?= brand_theme_link() ?>
 <script src="/assets/app.js" defer></script>
 </head>
 <body class="bare">

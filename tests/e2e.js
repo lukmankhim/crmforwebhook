@@ -414,6 +414,24 @@ async function waitNextStep() {
   await page.click('form[action="/login/2fa"] button');
   check('login dengan kode 2FA berhasil', page.url() === BASE + '/', page.url());
 
+  // 16. Warna aksen brand: tanpa brand.accent tidak ada theme.css, dan aksen yang dipakai selalu lolos kontras AA
+  const themeResp = await sp.request.get(BASE + '/theme.css');
+  check('tanpa brand.accent /theme.css 404', themeResp.status() === 404, String(themeResp.status()));
+  check('tanpa brand.accent layout tidak memuat theme.css', (await page.locator('link[href^="/theme.css"]').count()) === 0);
+  const palette = (hex) => JSON.parse(execFileSync('php', ['-r', `
+    require '${path.join(ROOT, 'lib/view.php')}';
+    $p = accent_palette($argv[1]);
+    if ($p) {
+        $rgb = array_map('hexdec', str_split(substr($p['accent'], 1), 2));
+        $p['min'] = min(contrast_ratio($rgb, [255, 255, 255]), contrast_ratio($rgb, [245, 244, 239]));
+    }
+    echo json_encode($p);`, '--', hex], { encoding: 'utf8' }));
+  const okAccent = palette('#123456');
+  check('aksen yang sudah kontras tidak diubah', okAccent.accent === '#123456' && !okAccent.adjusted, JSON.stringify(okAccent));
+  const lightAccent = palette('#66bb88');
+  check('aksen terang digelapkan sampai minimal 4,5:1', lightAccent.adjusted && lightAccent.min >= 4.5, JSON.stringify(lightAccent));
+  check('aksen bukan hex ditolak', palette('hijau') === null && palette('#12345') === null);
+
   check('tidak ada console error', consoleErrors.length === 0, consoleErrors.join(' | '));
   await browser.close();
   const failed = results.filter((x) => !x.ok);

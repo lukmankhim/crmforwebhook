@@ -47,6 +47,8 @@ return [
         'name' => 'CRM',
         // 'logo' => '/brand/logo.png',
         // 'favicon' => '/brand/favicon.png',
+        // Warna aksen (hex). Kalau kontrasnya kurang dari 4,5:1, otomatis digelapkan.
+        // 'accent' => '#123456',
     ],
 
     // Folder log, session, lock. Default: storage/ di root repo (di luar docroot).

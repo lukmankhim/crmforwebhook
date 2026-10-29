@@ -41,6 +41,7 @@ $routes = [
     ['GET',  '#^/login/2fa-setup$#', 'page_2fa_setup_form', 'pending'],
     ['POST', '#^/login/2fa-setup$#', 'page_2fa_setup_post', 'pending'],
     ['POST', '#^/logout$#', 'page_logout', 'public'],
+    ['GET',  '#^/theme\.css$#', 'page_theme_css', 'public'],
 
     ['GET',  '#^/$#', 'page_dashboard', 'leads.view'],
     ['GET',  '#^/leads$#', 'page_leads_index', 'leads.view'],

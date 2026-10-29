@@ -13,6 +13,7 @@
   --accent: #0d6b50;
   --accent-ink: #ffffff;
   --accent-soft: #e2efe8;
+  --accent-hover: #0a553f;
   --danger: #a1271d;
   --danger-soft: #fbeae8;
   --warn: #7d4c00;
@@ -127,7 +128,7 @@ select:disabled { background: var(--paper); color: var(--muted); }
 }
 .btn:hover { border-color: var(--ink); color: var(--ink); }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.btn-primary:hover { background: #0a553f; border-color: #0a553f; color: var(--accent-ink); }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-ink); }
 .btn-danger { color: var(--danger); border-color: #d8a6a1; }
 .btn-danger:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
 .btn-quiet { border-color: transparent; background: transparent; color: var(--accent); padding: 0 10px; }
@@ -236,7 +237,7 @@ tr.is-off td { color: var(--muted); }
 .chart__bar { fill: var(--accent); }
 .chart__hit { fill: transparent; }
 .chart__col:hover .chart__hit { fill: var(--accent-soft); }
-.chart__col:hover .chart__bar { fill: #0a553f; }
+.chart__col:hover .chart__bar { fill: var(--accent-hover); }
 .chart-table { margin-top: 8px; }
 .chart-table summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; color: var(--accent); }
 .chart-table .table { max-width: 360px; margin-top: 8px; }

@@ -139,6 +139,8 @@ sudo -u www-data php bin/fetch-brand.php https://situs-anda.com --name="Nama CRM
 
 Script menyimpan file ke `public/brand/` (tidak ikut git), menolak file yang bukan gambar, lebih dari 1MB, atau SVG yang berisi script. Lalu ia mencetak potongan `'brand' => [...]` untuk ditempel ke `config/config.php`. Kalau logo tidak ketemu otomatis, taruh file logo manual di `public/brand/` dan isi path-nya di config.
 
+Warna aksen (tombol, link, grafik) bisa ikut warna brand lewat `'accent' => '#123456'` di bagian `brand`. Ambil dari warna situs bisnis, jangan menebak. Aplikasi mengecek kontras: teks putih di atas aksen dan aksen di atas latar terang harus minimal 4,5:1. Kalau kurang, warna digelapkan otomatis dan dicatat di `storage/logs/app.log`. Hex yang tidak valid diabaikan (pakai warna bawaan).
+
 ## Pakai pertama kali
 
 1. Login superadmin, buat tenant (misalnya `bisnis-a`, `client-b`) di menu Tenant.

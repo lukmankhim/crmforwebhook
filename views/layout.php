@@ -25,6 +25,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 <title><?= e($title ?? brand('name')) ?><?= $tenant ? ' · ' . e($tenant['name']) : '' ?> · <?= e(brand('name')) ?></title>
 <?= brand_head() ?>
 <link rel="stylesheet" href="/assets/app.css">
+<?= brand_theme_link() ?>
 <script src="/assets/app.js" defer></script>
 </head>
 <body>
