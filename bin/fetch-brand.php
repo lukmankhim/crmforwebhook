@@ -81,6 +81,24 @@ function svg_is_safe(string $svg): bool
     return !preg_match('/<script|<foreignObject|\son[a-z]+\s*=|javascript:|<iframe|<embed|<object|(?:xlink:)?href\s*=\s*["\']\s*(?:https?:)?\/\//i', $svg);
 }
 
+/**
+ * DOMDocument::loadHTML mengubah nama tag dan atribut jadi huruf kecil (viewbox, lineargradient),
+ * padahal SVG peka huruf. Cari teks asli SVG itu di HTML mentah dengan parser yang sama.
+ */
+function raw_svg(string $html, string $parsed): ?string
+{
+    preg_match_all('#<svg\b.*?</svg>#is', $html, $m);
+    foreach ($m[0] as $raw) {
+        $d = new DOMDocument();
+        $d->loadHTML($raw, LIBXML_NONET | LIBXML_NOERROR);
+        $node = $d->getElementsByTagName('svg')->item(0);
+        if ($node && $d->saveHTML($node) === $parsed) {
+            return $raw;
+        }
+    }
+    return null;
+}
+
 function save_image(string $url, string $basename, string $dir): ?string
 {
     $r = fetch($url);
@@ -165,7 +183,9 @@ foreach ($xp->query('//img') as $img) {
     }
 }
 foreach ($xp->query('//*[contains(translate(@class, "LOGO", "logo"), "logo")]//svg | //svg[contains(translate(@class, "LOGO", "logo"), "logo")]') as $svg) {
-    $logos[] = 'inline-svg:' . $doc->saveHTML($svg);
+    if ($raw = raw_svg($page['body'], $doc->saveHTML($svg))) {
+        $logos[] = 'inline-svg:' . $raw;
+    }
     break;
 }
 
@@ -187,11 +207,13 @@ $logo = null;
 foreach (array_unique($logos) as $u) {
     if (str_starts_with($u, 'inline-svg:')) {
         $svg = substr($u, 11);
-        if (svg_is_safe($svg) && strlen($svg) < BRAND_MAX_BYTES) {
+        $svg = str_contains($svg, 'xmlns=') ? $svg : preg_replace('/<svg\b/i', '<svg xmlns="http://www.w3.org/2000/svg"', $svg, 1);
+        // Dibuka sebagai file .svg, jadi harus XML yang valid (HTML longgar seperti atribut tanpa kutip tidak tampil).
+        if (svg_is_safe($svg) && strlen($svg) < BRAND_MAX_BYTES && (new DOMDocument())->loadXML($svg, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING)) {
             foreach (glob($dir . '/logo.*') ?: [] as $old) {
                 unlink($old);
             }
-            file_put_contents($dir . '/logo.svg', str_contains($svg, 'xmlns=') ? $svg : preg_replace('/<svg\b/i', '<svg xmlns="http://www.w3.org/2000/svg"', $svg, 1));
+            file_put_contents($dir . '/logo.svg', $svg);
             chmod($dir . '/logo.svg', 0644);
             echo "  tersimpan public/brand/logo.svg (SVG di halaman)\n";
             $logo = '/brand/logo.svg';
