@@ -1,0 +1,8 @@
+[crm-auth]
+enabled  = true
+filter   = crm-auth
+logpath  = /var/www/crm/storage/logs/auth.log
+port     = http,https
+maxretry = 10
+findtime = 900
+bantime  = 3600

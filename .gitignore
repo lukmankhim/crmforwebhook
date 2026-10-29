@@ -1,0 +1,7 @@
+config/config.php
+storage/logs/*
+storage/sessions/*
+storage/locks/*
+storage/exports/*
+!storage/*/.gitkeep
+node_modules/

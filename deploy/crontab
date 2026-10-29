@@ -1,0 +1,4 @@
+# Pasang untuk user www-data: sudo crontab -u www-data deploy/crontab
+# (atau salin baris di bawah ke crontab yang sudah ada)
+* * * * * php /var/www/crm/cron/ingest-worker.php >> /var/www/crm/storage/logs/cron.log 2>&1
+17 * * * * php /var/www/crm/cron/cleanup.php >> /var/www/crm/storage/logs/cron.log 2>&1
