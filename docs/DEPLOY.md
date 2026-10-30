@@ -66,6 +66,25 @@ sudo systemctl reload nginx
 sudo crontab -u www-data /var/www/crm/deploy/crontab
 ```
 
+> **Penting: `crontab <file>` MENGGANTI seluruh crontab user itu, bukan menambah.**
+> Perintah di atas hanya aman kalau user `www-data` belum punya cron lain (VPS khusus aplikasi ini).
+> Di shared hosting (cPanel dan sejenisnya) satu crontab dipakai bareng semua situs di akun itu.
+> Kalau `deploy/crontab` dipasang langsung, cron situs lain ikut terhapus tanpa pesan error.
+>
+> Cara aman, untuk server mana pun yang crontab-nya sudah berisi:
+>
+> ```bash
+> crontab -l > ~/crontab-sebelum-$(date +%F).txt               # backup dulu
+> cp ~/crontab-sebelum-$(date +%F).txt ~/crontab-baru.txt
+> grep -v '^#' deploy/crontab >> ~/crontab-baru.txt             # tambahkan baris CRM
+> # sesuaikan path php dan folder aplikasi di ~/crontab-baru.txt, lalu:
+> crontab ~/crontab-baru.txt
+> crontab -l                                                    # pastikan baris lama masih ada
+> ```
+>
+> Jangan pakai `crontab -l | ... | crontab -`: di beberapa panel hosting pola pipe ini malah
+> menghasilkan crontab kosong.
+
 - `ingest-worker.php` tiap menit: mengubah webhook yang masuk jadi lead, coba ulang dengan jeda 1, 5, 15, 60 menit, gagal ke-5 kirim Telegram.
 - `sync.php` tiap menit: hanya menjalankan integrasi yang aktif dan sudah 60 menit sejak sync terakhir (atau diminta lewat tombol Sync sekarang).
 - `cleanup.php` tiap jam: hapus payload mentah lebih dari 30 hari, counter rate limit, dan session lama.
