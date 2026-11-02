@@ -1,0 +1,65 @@
+/* Kuitansi publik: dokumen putih satu kolom, satu aksen dari tenant (lihat /kuitansi-tema/<tenant>.css). */
+.receipt { --r-accent: #357a4e; --r-accent-soft: #e7efea; --r-ink: #111827; --r-muted: #4b5563; --r-line: #e5e7eb; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body.receipt-page {
+  margin: 0; background: #f3f4f6; color: #111827;
+  font: 16px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+.receipt {
+  max-width: 720px; margin: 24px auto; background: #fff; color: var(--r-ink);
+  border-top: 6px solid var(--r-accent); border-radius: 8px; padding: 28px 32px 24px;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.08);
+}
+.receipt p, .receipt h1, .receipt dl, .receipt dd { margin: 0; }
+.receipt__head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 24px; padding-bottom: 20px; border-bottom: 1px solid var(--r-line); }
+.receipt__brand { min-width: 0; flex: 1 1 260px; }
+.receipt__logo { display: block; max-height: 56px; max-width: 220px; width: auto; margin-bottom: 8px; }
+.receipt__business { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; }
+.receipt__meta { text-align: right; flex: 0 1 auto; }
+.receipt__meta h1 { font-size: 1.5rem; letter-spacing: 0.02em; }
+.receipt__no { color: var(--r-accent); font-weight: 650; font-variant-numeric: tabular-nums; }
+.receipt__small { display: block; color: var(--r-muted); font-size: 0.875rem; overflow-wrap: anywhere; }
+.receipt__void { margin-top: 16px !important; padding: 10px 12px; border-radius: 6px; background: #fbeae8; color: #6d1912; font-weight: 600; }
+
+.receipt__rows { margin-top: 20px !important; }
+.receipt__rows > div, .receipt__summary > div { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--r-line); }
+.receipt__rows dt, .receipt__summary dt { color: var(--r-muted); }
+.receipt__rows dd { overflow-wrap: anywhere; }
+.receipt__kind { display: inline-block; padding: 0 8px; border-radius: 4px; background: var(--r-accent-soft); color: var(--r-ink); font-weight: 600; }
+
+.receipt__amount { margin-top: 20px; padding: 16px; border-radius: 6px; background: var(--r-accent-soft); }
+.receipt__label { color: var(--r-muted); font-size: 0.875rem; }
+.receipt__total { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.receipt__total--void { text-decoration: line-through; color: var(--r-muted); }
+.receipt__words { margin-top: 4px !important; font-style: italic; color: var(--r-ink); }
+
+.receipt__summary { margin-top: 16px !important; }
+.receipt__summary dd { text-align: right; font-variant-numeric: tabular-nums; }
+
+.receipt__foot { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--r-line); }
+.receipt__foot p + p { margin-top: 4px; }
+.receipt__actions { margin-top: 20px !important; }
+.receipt__btn {
+  font: inherit; font-weight: 600; min-height: 44px; padding: 0 18px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--r-accent); background: var(--r-accent); color: #fff;
+}
+.receipt__btn:focus-visible { outline: 3px solid var(--r-ink); outline-offset: 2px; }
+
+@media (max-width: 560px) {
+  .receipt { margin: 0; border-radius: 0; padding: 20px 16px; box-shadow: none; }
+  .receipt__meta { text-align: left; }
+  .receipt__rows > div, .receipt__summary > div { grid-template-columns: 1fr; gap: 2px; }
+  .receipt__summary dd { text-align: left; }
+  .receipt__total { font-size: 1.6rem; }
+  .receipt__btn { width: 100%; }
+}
+
+@page { size: A4; margin: 16mm; }
+@media print {
+  body.receipt-page { background: #fff; }
+  .receipt { margin: 0; max-width: none; box-shadow: none; padding: 0 0 0; border-radius: 0; }
+  .receipt__actions { display: none; }
+  .receipt__amount, .receipt__kind { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

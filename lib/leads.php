@@ -10,7 +10,9 @@ const DEFAULT_STAGES = [
     ['lost', 'Lost', 'lost'],
 ];
 
-const ATTRIBUTION_FIELDS = ['src_tag', 'ctwa_clid', 'ad_id', 'fbclid', 'gclid', 'gbraid', 'wbraid', 'ttclid', 'landing_url', 'referrer', 'user_agent'];
+const ATTRIBUTION_FIELDS = ['src_tag', 'ctwa_clid', 'ad_id', 'fbclid', 'fbp', 'fbc', 'gclid', 'gbraid', 'wbraid', 'ttclid', 'landing_url', 'referrer', 'user_agent'];
+// Data kontak dari form website: diisi ke lead hanya kalau kolomnya masih kosong.
+const INGEST_FILL_FIELDS = ['email' => 190, 'product' => 150, 'city' => 100, 'lead_event_id' => 64];
 
 /** Dipanggil saat tenant dibuat. Butuh konteks tenant sudah diset. */
 function create_default_pipeline(): int
@@ -142,9 +144,22 @@ function lead_upsert_from_ingest(array $norm, array $source): array
             $sets[] = 'name = :name';
             $params['name'] = mb_substr($norm['name'], 0, 150);
         }
+        foreach (ingest_fill_values($norm) as $f => $v) {
+            if ($v !== null && ($existing[$f] === null || $existing[$f] === '')) {
+                $sets[] = "$f = :$f";
+                $params[$f] = $v;
+            }
+        }
+        // Persetujuan kuitansi dari form terbaru berlaku untuk email yang dikirim bersamanya.
+        if (!empty($norm['receipt_optin']) && !empty($norm['email']) && ($existing['email'] === null || $existing['email'] === $norm['email'])) {
+            $sets[] = 'receipt_optin_at = COALESCE(receipt_optin_at, UTC_TIMESTAMP())';
+        }
         $sets[] = 'touched_at = UTC_TIMESTAMP()';
         q_tenant('UPDATE leads SET ' . implode(', ', $sets) . ' WHERE tenant_id = :tid AND id = :id', $params);
         lead_log((int) $existing['id'], 'ingest_repeat', ingest_activity_text($norm, $source));
+        if (!empty($norm['event_id'])) {
+            conversion_queue_lead((int) $existing['id'], (string) $norm['event_id']);
+        }
         return [(int) $existing['id'], false];
     }
 
@@ -162,15 +177,33 @@ function lead_upsert_from_ingest(array $norm, array $source): array
         'source' => $leadSource,
         'stage' => entry_stage(pipeline_stages($pipelineId)),
     ];
-    foreach ($attr as $f => $v) {
+    foreach ($attr + ingest_fill_values($norm) as $f => $v) {
         $cols[] = $f;
         $vals[] = ':' . $f;
         $params[$f] = $v;
     }
+    if (!empty($norm['receipt_optin']) && !empty($norm['email'])) {
+        $cols[] = 'receipt_optin_at';
+        $vals[] = 'UTC_TIMESTAMP()';
+    }
     q_tenant('INSERT INTO leads (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')', $params);
     $id = (int) db()->lastInsertId();
     lead_log($id, 'created', ingest_activity_text($norm, $source));
+    if (!empty($norm['event_id'])) {
+        conversion_queue_lead($id, (string) $norm['event_id']);
+    }
     return [$id, true];
+}
+
+/** Nilai kontak dari ingest yang sudah dipotong sesuai panjang kolom. */
+function ingest_fill_values(array $norm): array
+{
+    $out = [];
+    foreach (INGEST_FILL_FIELDS as $f => $max) {
+        $v = $f === 'lead_event_id' ? ($norm['event_id'] ?? null) : ($norm[$f] ?? null);
+        $out[$f] = ($v === null || $v === '') ? null : mb_substr((string) $v, 0, $max);
+    }
+    return $out;
 }
 
 function ingest_activity_text(array $norm, array $source): string
@@ -180,7 +213,10 @@ function ingest_activity_text(array $norm, array $source): string
         $text .= ', campaign: ' . mb_substr($norm['campaign'], 0, 150);
     }
     if (!empty($norm['message'])) {
-        $text .= "\nPesan: " . mb_substr($norm['message'], 0, 500);
+        $text .= "\nPesan: " . mb_substr($norm['message'], 0, 1500);
+    }
+    if (!empty($norm['email'])) {
+        $text .= "\nEmail: " . $norm['email'] . (!empty($norm['receipt_optin']) ? ' (minta kuitansi lewat email)' : '');
     }
     return $text;
 }
@@ -224,7 +260,7 @@ function lead_change_stage(array $lead, string $stageKey, int $userId, ?string $
     return null;
 }
 
-const LEAD_EDITABLE = ['name', 'product', 'city', 'assigned_to', 'quote_value', 'deal_value', 'next_followup', 'lost_reason'];
+const LEAD_EDITABLE = ['name', 'email', 'product', 'city', 'assigned_to', 'quote_value', 'deal_value', 'next_followup', 'lost_reason'];
 
 function lead_update_fields(array $lead, array $input, int $userId): ?string
 {
@@ -236,6 +272,9 @@ function lead_update_fields(array $lead, array $input, int $userId): ?string
     }
     if ($input['next_followup'] !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $input['next_followup'])) {
         return 'Format tanggal follow up tidak valid.';
+    }
+    if ($input['email'] !== null && !filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+        return 'Format email tidak valid.';
     }
 
     $changes = [];
@@ -260,10 +299,25 @@ function lead_update_fields(array $lead, array $input, int $userId): ?string
             $sets[] = "$f = :$f";
             $params[$f] = $input[$f];
         }
+        if (isset($changes['email'])) {
+            // Email baru: status mental lama tidak berlaku lagi.
+            $sets[] = 'email_bounced_at = NULL';
+        }
         $sets[] = 'touched_at = UTC_TIMESTAMP()';
         q_tenant('UPDATE leads SET ' . implode(', ', $sets) . ' WHERE tenant_id = :tid AND id = :id', $params);
         lead_log((int) $lead['id'], 'update', 'Ubah: ' . implode(', ', array_keys($changes)), $userId);
         audit('lead_update', 'lead', $lead['id'], $changes);
     });
     return null;
+}
+
+/** Persetujuan kirim kuitansi lewat email. Diubah admin kalau klien minta lewat jalur lain (WA, langsung). */
+function lead_set_receipt_optin(array $lead, bool $optin, int $userId): void
+{
+    if ($optin === ($lead['receipt_optin_at'] !== null)) {
+        return;
+    }
+    q_tenant('UPDATE leads SET receipt_optin_at = ' . ($optin ? 'UTC_TIMESTAMP()' : 'NULL') . ' WHERE tenant_id = :tid AND id = :id', ['id' => $lead['id']]);
+    lead_log((int) $lead['id'], 'update', $optin ? 'Klien setuju kuitansi dikirim lewat email' : 'Kirim kuitansi lewat email dimatikan', $userId);
+    audit('lead_receipt_optin', 'lead', $lead['id'], ['optin' => $optin]);
 }

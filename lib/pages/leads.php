@@ -167,6 +167,10 @@ function page_leads_show(int $id): void
         'stages' => pipeline_stages((int) $lead['pipeline_id']),
         'members' => tenant_members(),
         'activity' => $activity,
+        'payments' => lead_payments($id),
+        'pay_summary' => lead_payment_summary($lead),
+        'conversions' => lead_conversions($id),
+        'email_ready' => receipt_email_ready(),
     ]);
 }
 
@@ -175,6 +179,7 @@ function page_leads_update(int $id): never
     $lead = lead_or_404($id);
     $input = [
         'name' => nullable_input('name', 150),
+        'email' => ($v = nullable_input('email', 190)) === null ? null : strtolower($v),
         'product' => nullable_input('product', 150),
         'city' => nullable_input('city', 100),
         'assigned_to' => ((int) ($_POST['assigned_to'] ?? 0)) ?: null,
@@ -184,6 +189,9 @@ function page_leads_update(int $id): never
         'lost_reason' => nullable_input('lost_reason', 255),
     ];
     $error = lead_update_fields($lead, $input, (int) current_user()['id']);
+    if (!$error) {
+        lead_set_receipt_optin(find_lead($id), ($_POST['receipt_optin'] ?? '') === '1', (int) current_user()['id']);
+    }
     flash($error ? 'error' : 'success', $error ?: 'Perubahan tersimpan.');
     redirect('/leads/' . $id);
 }

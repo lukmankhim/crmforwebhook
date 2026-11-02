@@ -23,6 +23,13 @@ function ingest_adapters(): array
                 'landing_path' => 'landing_url',
                 'referrer_path' => 'referrer',
                 'click_id_paths' => ['gclid' => 'gclid', 'fbclid' => 'fbclid', 'gbraid' => 'gbraid', 'wbraid' => 'wbraid', 'ttclid' => 'ttclid', 'ctwa_clid' => 'ctwa_clid'],
+                'email_path' => 'email',
+                'receipt_optin_path' => 'receipt_optin',
+                'product_path' => 'product',
+                'city_path' => 'city',
+                'fbp_path' => 'fbp',
+                'fbc_path' => 'fbc',
+                'event_id_path' => 'event_id',
             ],
         ],
         'qontak' => [
@@ -89,6 +96,13 @@ function ingest_normalize(array $source, array $payload): array
         foreach (CLICK_ID_FIELDS as $f) {
             $norm[$f] = json_path_get($payload, $m['click_id_paths'][$f] ?? null);
         }
+        foreach (['product', 'city', 'fbp', 'fbc', 'event_id'] as $f) {
+            $norm[$f] = json_path_get($payload, $m[$f . '_path'] ?? null);
+        }
+        $email = strtolower((string) json_path_get($payload, $m['email_path'] ?? null));
+        $norm['email'] = filter_var($email, FILTER_VALIDATE_EMAIL) && strlen($email) <= 190 ? $email : null;
+        $optin = strtolower((string) json_path_get($payload, $m['receipt_optin_path'] ?? null));
+        $norm['receipt_optin'] = in_array($optin, ['1', 'true', 'yes', 'ya', 'on'], true);
     }
 
     $norm['phone'] = normalize_phone($norm['phone_raw']);

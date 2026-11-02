@@ -88,6 +88,7 @@ sudo crontab -u www-data /var/www/crm/deploy/crontab
 - `ingest-worker.php` tiap menit: mengubah webhook yang masuk jadi lead, coba ulang dengan jeda 1, 5, 15, 60 menit, gagal ke-5 kirim Telegram.
 - `sync.php` tiap menit: hanya menjalankan integrasi yang aktif dan sudah 60 menit sejak sync terakhir (atau diminta lewat tombol Sync sekarang).
 - `cleanup.php` tiap jam: hapus payload mentah lebih dari 30 hari, counter rate limit, dan session lama.
+- `outbox-worker.php` tiap menit: kirim email kuitansi (Brevo) dan konversi offline (Meta) dari antrian. Email gagal dicoba ulang 1, 5, 15, 60, 240 menit; pengaturan tenant yang belum lengkap membuat antrian menunggu, tidak dibuang.
 
 ## 8. fail2ban
 
@@ -222,4 +223,22 @@ Di terminal lain:
 SUPER_PASS='password-uji-123' node tests/e2e.js
 ```
 
+Tes fitur kuitansi (DB bersih lagi, plus server tiruan Brevo dan Meta):
+
+```bash
+php -S 127.0.0.1:8091 tests/mock-outbox.php
+# config lokal: 'brevo' => ['endpoint' => 'http://127.0.0.1:8091/brevo'], 'meta' => ['graph_url' => 'http://127.0.0.1:8091/meta']
+SUPER_PASS='password-uji-123' node tests/e2e-kuitansi.js        # SHOTS_DIR=/tmp/shots untuk simpan screenshot
+```
+
 `tests/reset-local.sh` menghapus seluruh database lokal. Jangan dijalankan di server produksi.
+
+## Kuitansi pembayaran
+
+Rencana dan skema: `docs/KUITANSI.md`. Setelah `php bin/migrate.php` (migrasi `003_kuitansi`):
+
+1. Tambah cron `outbox-worker.php` (lihat `deploy/crontab`).
+2. Admin tenant mengisi Pengaturan, Kuitansi & iklan: data usaha, email pengirim + API key Brevo, token webhook, dan (opsional) dataset + token Meta.
+3. IP server harus diizinkan di Brevo (Security, Authorized IPs) untuk API key.
+4. Logo kuitansi: unggah file ke `public/brand/` di server (tidak ikut git), lalu pilih di pengaturan.
+5. Form booking website mengirim ke endpoint ingest dengan field `email`, `receipt_optin`, `product`, `city`, `fbp`, `fbc`, `event_id` (mapping bawaan adapter generic).

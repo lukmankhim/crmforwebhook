@@ -19,6 +19,7 @@ Repo ini public: jangan tulis nama tenant, nama client, domain client, atau data
 - Fase 1 (fondasi) sudah dibangun: auth + 2FA, tenant, user, pipeline, lead (daftar, detail, input manual), audit log, endpoint webhook generik + worker, script backup.
 - Fase 2 sudah dibangun: ringkasan di `/` (lead, closing, nilai, konversi, grafik harian, pipeline, follow up, per sumber), kanban di `/leads?view=kanban`, import CSV di `/leads/import` (khusus admin).
 - Fase 3 sudah dibangun: framework integrasi per tenant (opsional) di `lib/integrations.php`, konektor GA4 dan Search Console, cron `cron/sync.php`, pengaturan di `/settings/integrations`, halaman `/sources`. Diuji dengan `tests/mock-google.php`, belum dengan akun Google sungguhan.
+- Kuitansi pembayaran sudah dibangun (`docs/KUITANSI.md`): email + opt-in di lead, catat DP/pelunasan, nomor kuitansi per tenant, halaman `/r/{token}`, email lewat Brevo (`cron/outbox-worker.php`), webhook status `/hooks/brevo/{tenant}`, konversi offline Meta (Lead + Purchase) yang menunggu sampai dataset diisi. Pengaturan per tenant di `tenant_settings` (`/settings/receipts`). Diuji `tests/e2e-kuitansi.js` + `tests/mock-outbox.php`.
 - Fase 4 dan 5 belum. Provider baru (Google Ads, Meta) ditambahkan di `integration_providers()`. Kerjakan satu fase per satu, tiap fase harus bisa dipakai.
 
 ## Branding

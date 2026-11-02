@@ -186,6 +186,16 @@ tr.is-off td { color: var(--muted); }
 .status--processed { background: var(--accent-soft); border-color: #a9cfbd; }
 .status--failed, .status--rejected { background: var(--danger-soft); border-color: #e2b3ae; color: #6d1912; }
 .status--retry { background: var(--warn-soft); border-color: #e6cf9f; color: var(--warn); }
+/* Status email kuitansi dan konversi iklan: hijau = sampai/terkirim, kuning = menunggu, merah = gagal. */
+.status--delivered, .status--opened, .status--sent { background: var(--accent-soft); border-color: #a9cfbd; }
+.status--queued, .status--pending, .status--waiting_config { background: var(--warn-soft); border-color: #e6cf9f; color: var(--warn); }
+.status--bounced, .status--spam, .status--blocked, .status--expired { background: var(--danger-soft); border-color: #e2b3ae; color: #6d1912; }
+.status--cancelled { color: var(--muted); }
+.void-box summary { list-style: none; display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; }
+.void-box summary::-webkit-details-marker { display: none; }
+.void-box[open] { flex-basis: 100%; }
+.void-box form { margin-top: 8px; max-width: 320px; }
+.payments td:last-child { min-width: 0; }
 
 /* Detail lead */
 .detail-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }

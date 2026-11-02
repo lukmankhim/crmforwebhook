@@ -1,6 +1,8 @@
 # Rencana fitur: kuitansi pembayaran
 
-Status: rencana, belum dibangun. Versi lengkap (dengan contoh tenant) disimpan di luar repo.
+Status: fase 1 sampai 4 sudah dibangun dan diuji (`tests/e2e-kuitansi.js`). Versi lengkap (dengan contoh tenant) disimpan di luar repo.
+
+Catatan implementasi: kunci Brevo, token webhook, dan token Meta disimpan per tenant di tabel `tenant_settings` (terenkripsi `app_key`), diisi admin lewat Pengaturan, Kuitansi & iklan. Setiap pembayaran dikirim sebagai satu event Purchase senilai pembayaran itu.
 
 TumpuCRM bisa mencatat pembayaran DP dan pelunasan per lead, lalu mengirim kuitansi resmi ke email klien yang memintanya.
 

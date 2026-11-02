@@ -1,4 +1,4 @@
-// JS minimal: konfirmasi aksi berisiko, tombol salin, status loading form, dan field alasan lost.
+// JS minimal: konfirmasi aksi berisiko, tombol salin, cetak, status loading form, dan field alasan lost.
 (function () {
   'use strict';
 
@@ -7,6 +7,11 @@
     if (confirmBtn && !window.confirm(confirmBtn.getAttribute('data-confirm'))) {
       e.preventDefault();
       e.stopImmediatePropagation();
+      return;
+    }
+
+    if (e.target.closest('[data-print]')) {
+      window.print();
       return;
     }
 
@@ -29,7 +34,7 @@
   // Cegah submit ganda: tombol dinonaktifkan dan diberi label proses.
   document.addEventListener('submit', function (e) {
     var form = e.target;
-    if (form.method.toLowerCase() !== 'post') return;
+    if ((form.getAttribute('method') || '').toLowerCase() !== 'post') return;
     var btn = e.submitter || form.querySelector('button[type="submit"]');
     if (!btn) {
       btn = document.querySelector('button[form="' + form.id + '"]');

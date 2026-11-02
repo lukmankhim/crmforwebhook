@@ -6,3 +6,4 @@
 * * * * * php /var/www/crm/cron/ingest-worker.php >> /var/www/crm/storage/logs/cron.log 2>&1
 * * * * * php /var/www/crm/cron/sync.php >> /var/www/crm/storage/logs/cron.log 2>&1
 17 * * * * php /var/www/crm/cron/cleanup.php >> /var/www/crm/storage/logs/cron.log 2>&1
+* * * * * php /var/www/crm/cron/outbox-worker.php >> /var/www/crm/storage/logs/cron.log 2>&1

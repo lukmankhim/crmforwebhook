@@ -12,6 +12,7 @@ require ROOT . '/lib/pages/integrations.php';
 require ROOT . '/lib/pages/sources.php';
 require ROOT . '/lib/pages/account.php';
 require ROOT . '/lib/pages/super.php';
+require ROOT . '/lib/pages/payments.php';
 
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
@@ -32,7 +33,8 @@ set_exception_handler(function (Throwable $e) {
 
 session_boot();
 
-// [method, pola path, handler, akses]. Akses: public | pending | auth | leads.view | leads.edit | settings | super
+// [method, pola path, handler, akses]. Akses: public | hook | pending | auth | leads.view | leads.edit | settings | super
+// hook = endpoint mesin ke mesin (tanpa CSRF), autentikasi di handler.
 $routes = [
     ['GET',  '#^/login$#', 'page_login_form', 'public'],
     ['POST', '#^/login$#', 'page_login_post', 'public'],
@@ -42,6 +44,9 @@ $routes = [
     ['POST', '#^/login/2fa-setup$#', 'page_2fa_setup_post', 'pending'],
     ['POST', '#^/logout$#', 'page_logout', 'public'],
     ['GET',  '#^/theme\.css$#', 'page_theme_css', 'public'],
+    ['GET',  '#^/r/([a-f0-9]{64})$#', 'page_receipt_public', 'public'],
+    ['GET',  '#^/kuitansi-tema/([a-z0-9-]{1,64})\.css$#', 'page_receipt_theme', 'public'],
+    ['POST', '#^/hooks/brevo/([a-z0-9-]{1,64})$#', 'page_hook_brevo', 'hook'],
 
     ['GET',  '#^/$#', 'page_dashboard', 'leads.view'],
     ['GET',  '#^/leads$#', 'page_leads_index', 'leads.view'],
@@ -57,6 +62,9 @@ $routes = [
     ['POST', '#^/leads/(\d+)$#', 'page_leads_update', 'leads.edit'],
     ['POST', '#^/leads/(\d+)/stage$#', 'page_leads_stage', 'leads.edit'],
     ['POST', '#^/leads/(\d+)/note$#', 'page_leads_note', 'leads.edit'],
+    ['POST', '#^/leads/(\d+)/payments$#', 'page_payment_create', 'leads.edit'],
+    ['POST', '#^/payments/(\d+)/resend$#', 'page_payment_resend', 'leads.edit'],
+    ['POST', '#^/payments/(\d+)/void$#', 'page_payment_void', 'settings'],
 
     ['GET',  '#^/settings$#', 'page_settings_home', 'settings'],
     ['GET',  '#^/settings/tenant$#', 'page_settings_tenant', 'settings'],
@@ -66,6 +74,8 @@ $routes = [
     ['POST', '#^/settings/users/(\d+)$#', 'page_settings_users_update', 'settings'],
     ['GET',  '#^/settings/pipeline$#', 'page_settings_pipeline', 'settings'],
     ['POST', '#^/settings/pipeline$#', 'page_settings_pipeline_post', 'settings'],
+    ['GET',  '#^/settings/receipts$#', 'page_settings_receipts', 'settings'],
+    ['POST', '#^/settings/receipts$#', 'page_settings_receipts_post', 'settings'],
 
     ['GET',  '#^/sources$#', 'page_sources', 'leads.view'],
     ['GET',  '#^/settings/integrations$#', 'page_integrations', 'settings'],
@@ -107,18 +117,19 @@ foreach ($routes as [$m, $pattern, $handler, $access]) {
     if ($m !== $method) {
         continue;
     }
-    if ($method === 'POST' && !csrf_valid()) {
+    if ($method === 'POST' && $access !== 'hook' && !csrf_valid()) {
         error_page(419, 'Muat ulang halaman lalu coba lagi.');
     }
     authorize($access);
-    $handler(...array_map('intval', array_slice($params, 1)));
+    // Parameter angka (ID) jadi int, selain itu (token, slug) tetap string.
+    $handler(...array_map(fn($p) => ctype_digit($p) && strlen($p) <= 18 ? (int) $p : $p, array_slice($params, 1)));
     exit;
 }
 error_page($matchedPath ? 405 : 404);
 
 function authorize(string $access): void
 {
-    if ($access === 'public') {
+    if ($access === 'public' || $access === 'hook') {
         return;
     }
     if ($access === 'pending') {
