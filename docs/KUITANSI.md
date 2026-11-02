@@ -110,4 +110,6 @@ Payload booking: `name`, `phone`, `email`, `receipt_optin`, `product` (jenis aca
 
 Pencocokan: form booking mengirim `gclid`, `gbraid`, `wbraid`, `fbclid`, `_fbp`, `_fbc` (tambah kolom `fbp` dan `fbc` di `leads`), plus email dan nomor HP yang di-hash SHA-256 bila ada. Tabel `conversion_events`: `tenant_id`, `payment_id`, `platform`, `event_name`, `value`, `event_id` (dedup), `status`, `response`, `sent_at`; dikirim worker dengan coba ulang. Pengaturan tenant menyimpan ID dataset + token CAPI Meta dan akun + aksi konversi Google Ads. Uji lewat Test Events Meta dan laporan unggahan konversi Google.
 
+Tenant yang belum punya dataset Meta tetap disiapkan: form booking push `booking_submit` ke dataLayer GTM dengan `event_id` unik (tag Pixel tinggal dipicu event ini), `event_id` yang sama ikut ke CRM untuk dedup Pixel dan CAPI, `_fbp`/`_fbc`/`fbclid` disimpan sejak awal, dan event dicatat di `conversion_events` dengan status menunggu pengaturan. Begitu dataset dan token diisi, event baru langsung terkirim; event lama hanya dikirim kalau masih dalam batas umur yang diterima Meta. Google Ads opsional per tenant.
+
 **Sebelum fase selesai:** `tests/e2e.js` lolos, semua tombol diklik dan console bersih, tampilan HP tanpa geser samping dan tombol minimal 44 px, tidak ada nama tenant atau kunci di repo, backup DB sebelum migrasi.
