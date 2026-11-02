@@ -99,4 +99,15 @@ Payload booking: `name`, `phone`, `email`, `receipt_optin`, `product` (jenis aca
 
 **Fase 3, status email:** endpoint webhook + rahasia per tenant; status per kuitansi; email mental menandai lead; uji event delivered dan opened.
 
+**Fase 4, konversi offline ke iklan:** DP dan pelunasan dicatat manual, jadi dikirim balik ke platform iklan sebagai konversi offline.
+
+| Kejadian di CRM | Meta (Conversions API) | Google Ads (konversi offline) |
+| --- | --- | --- |
+| Booking masuk | Lead (sudah dari website, tidak dikirim ulang) | Tidak dikirim |
+| DP dicatat | Purchase, nilai DP, `action_source` = system_generated | Konversi DP dengan nilai DP |
+| Pelunasan dicatat | Purchase kedua atau koreksi nilai ke nilai deal | Penyesuaian nilai ke nilai deal |
+| Kuitansi dibatalkan | Tidak bisa ditarik, dicatat di CRM | Penarikan konversi |
+
+Pencocokan: form booking mengirim `gclid`, `gbraid`, `wbraid`, `fbclid`, `_fbp`, `_fbc` (tambah kolom `fbp` dan `fbc` di `leads`), plus email dan nomor HP yang di-hash SHA-256 bila ada. Tabel `conversion_events`: `tenant_id`, `payment_id`, `platform`, `event_name`, `value`, `event_id` (dedup), `status`, `response`, `sent_at`; dikirim worker dengan coba ulang. Pengaturan tenant menyimpan ID dataset + token CAPI Meta dan akun + aksi konversi Google Ads. Uji lewat Test Events Meta dan laporan unggahan konversi Google.
+
 **Sebelum fase selesai:** `tests/e2e.js` lolos, semua tombol diklik dan console bersih, tampilan HP tanpa geser samping dan tombol minimal 44 px, tidak ada nama tenant atau kunci di repo, backup DB sebelum migrasi.
