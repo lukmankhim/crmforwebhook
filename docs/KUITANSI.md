@@ -86,7 +86,7 @@ Satu kolom di HP 360 px tanpa geser samping, muat satu halaman A4 saat dicetak, 
 | `POST /payments/{id}/void` | admin tenant | Batalkan kuitansi dengan alasan |
 | `POST /payments/{id}/resend` | user tenant | Kirim ulang email |
 | `GET /r/{token}` | publik | Halaman kuitansi |
-| `POST /hooks/brevo/{tenant}/{secret}` | Brevo | Event email, cocokkan `provider_msg_id` |
+| `POST /hooks/brevo/{tenant}` | Brevo, header `Authorization: Bearer` rahasia tenant | Event email, cocokkan `provider_msg_id` |
 | `POST /ingest/...` (sudah ada) | token sumber | Lead booking + `email` + `receipt_optin` |
 
 Payload booking: `name`, `phone`, `email`, `receipt_optin`, `product` (jenis acara), `city` (lokasi), `src_tag` = "booking"; tanggal dan konsep acara ke catatan aktivitas.
