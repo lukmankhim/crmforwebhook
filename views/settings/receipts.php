@@ -89,3 +89,36 @@ $secretNote = function (string $key) use ($has_secret): string {
   </div>
   <div class="actions"><button class="btn btn-primary" type="submit">Simpan Meta</button></div>
 </form>
+
+<form class="card stack form-narrow" method="post" action="/settings/receipts">
+  <?= csrf_field() ?>
+  <input type="hidden" name="section" value="google">
+  <h2>Konversi offline ke Google Ads</h2>
+  <p class="small">
+    <?= $gads_ready ? '<span class="status status--sent">Aktif</span>' : '<span class="status status--waiting_config">Belum diisi</span>' ?>
+    Setiap pembayaran 7 hari terakhir masuk ke feed CSV (nomor HP dan email di-hash). Google Ads menariknya sendiri lewat
+    Goals, Conversions, Uploads, Schedules, sumber HTTPS.
+  </p>
+  <div class="field">
+    <label for="gads_conversion_name">Nama konversi</label>
+    <input id="gads_conversion_name" name="gads_conversion_name" type="text" maxlength="100" value="<?= e($s['gads_conversion_name']) ?>" aria-describedby="gads-name-help">
+    <p id="gads-name-help" class="muted small">Sama persis dengan nama conversion action (impor, enhanced conversions for leads) di akun Google Ads.</p>
+  </div>
+  <?php if ($s['gads_feed_password'] !== ''): ?>
+    <div class="field">
+      <span class="label">Alamat feed</span>
+      <code class="secret breakall"><?= e($gads_feed_url) ?></code>
+      <button class="btn btn-quiet" type="button" data-copy="<?= e($gads_feed_url) ?>">Salin URL</button>
+    </div>
+    <div class="grid-2">
+      <div class="field"><span class="label">Username</span><code class="secret"><?= e($gads_feed_user) ?></code></div>
+      <div class="field">
+        <span class="label">Password</span>
+        <code class="secret breakall"><?= e($s['gads_feed_password']) ?></code>
+        <button class="btn btn-quiet" type="button" data-copy="<?= e($s['gads_feed_password']) ?>">Salin password</button>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" name="new_gads_feed_password" value="1"> Buat password baru (password lama langsung tidak berlaku)</label>
+  <?php endif; ?>
+  <div class="actions"><button class="btn btn-primary" type="submit">Simpan Google Ads</button></div>
+</form>

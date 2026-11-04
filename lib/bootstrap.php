@@ -60,4 +60,5 @@ require __DIR__ . '/notify.php';
 require __DIR__ . '/tenant_settings.php';
 require __DIR__ . '/payments.php';
 require __DIR__ . '/conversions.php';
+require __DIR__ . '/google_ads_feed.php';
 require __DIR__ . '/receipt_mail.php';

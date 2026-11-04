@@ -23,6 +23,8 @@ const TENANT_SETTING_DEFS = [
     'meta_dataset_id' => ['ID dataset Meta', false, ''],
     'meta_access_token' => ['Access token Conversions API', true, ''],
     'meta_test_event_code' => ['Test event code (opsional)', false, ''],
+    'gads_conversion_name' => ['Nama konversi Google Ads', false, ''],
+    'gads_feed_password' => ['Password feed Google Ads', true, ''],
 ];
 
 /** Semua pengaturan tenant aktif. Rahasia didekripsi; pakai hanya di server, jangan tampilkan ulang di form. */

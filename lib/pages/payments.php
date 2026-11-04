@@ -142,6 +142,9 @@ function page_settings_receipts(): void
         'meta_ready' => meta_capi_ready(),
         'waiting' => (int) q_tenant("SELECT COUNT(*) FROM conversion_events WHERE tenant_id = :tid AND status = 'waiting_config'")->fetchColumn(),
         'accent' => receipt_accent(),
+        'gads_ready' => gads_feed_ready(),
+        'gads_feed_url' => rtrim((string) config('app_url'), '/') . '/feeds/google-ads/' . $tenant['slug'] . '.csv',
+        'gads_feed_user' => $tenant['slug'],
     ]);
 }
 
@@ -154,6 +157,7 @@ function page_settings_receipts_post(): never
         'receipt' => ['receipt_business_name' => 150, 'receipt_address' => 255, 'receipt_contact' => 255, 'receipt_footer' => 255, 'receipt_prefix' => 10, 'receipt_accent' => 7, 'receipt_logo' => 120],
         'email' => ['mail_from_email' => 190, 'mail_from_name' => 100, 'mail_reply_to' => 190],
         'meta' => ['meta_dataset_id' => 20, 'meta_test_event_code' => 40],
+        'google' => ['gads_conversion_name' => 100],
     ][$section] ?? null;
     $secrets = ['email' => ['brevo_api_key', 'brevo_webhook_token'], 'meta' => ['meta_access_token']][$section] ?? [];
     if ($plain === null) {
@@ -178,7 +182,7 @@ function page_settings_receipts_post(): never
                 $error = 'Format email tidak valid.';
             }
         }
-    } elseif ($values['meta_dataset_id'] !== '' && !preg_match('/^\d{5,20}$/', $values['meta_dataset_id'])) {
+    } elseif ($section === 'meta' && $values['meta_dataset_id'] !== '' && !preg_match('/^\d{5,20}$/', $values['meta_dataset_id'])) {
         $error = 'ID dataset Meta berupa angka.';
     }
     if ($error) {
@@ -201,6 +205,11 @@ function page_settings_receipts_post(): never
             tenant_setting_set($k, $v);
             $changed[] = $k;
         }
+    }
+    if ($section === 'google' && (tenant_setting('gads_feed_password') === '' || ($_POST['new_gads_feed_password'] ?? '') === '1')) {
+        // Password feed dibuat aplikasi (bukan diketik admin), lalu ditempel ke pengaturan Scheduled uploads Google Ads.
+        tenant_setting_set('gads_feed_password', bin2hex(random_bytes(16)));
+        $changed[] = 'gads_feed_password (baru)';
     }
     if ($section === 'meta' && meta_capi_ready()) {
         // Event yang menunggu pengaturan siap dikirim worker (yang terlalu lama akan ditandai kedaluwarsa).

@@ -47,6 +47,7 @@ $routes = [
     ['GET',  '#^/r/([a-f0-9]{64})$#', 'page_receipt_public', 'public'],
     ['GET',  '#^/kuitansi-tema/([a-z0-9-]{1,64})\.css$#', 'page_receipt_theme', 'public'],
     ['POST', '#^/hooks/brevo/([a-z0-9-]{1,64})$#', 'page_hook_brevo', 'hook'],
+    ['GET',  '#^/feeds/google-ads/([a-z0-9-]{1,64})\.csv$#', 'page_feed_google_ads', 'hook'],
 
     ['GET',  '#^/$#', 'page_dashboard', 'leads.view'],
     ['GET',  '#^/leads$#', 'page_leads_index', 'leads.view'],

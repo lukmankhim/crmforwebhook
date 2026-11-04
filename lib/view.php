@@ -241,7 +241,7 @@ function money_input(string $key): ?string
 function source_labels(): array
 {
     return [
-        'ctwa' => 'Click to WhatsApp',
+        'ctwa' => 'Meta (IG/FB)',
         'lp' => 'Landing page',
         'gads' => 'Google Ads',
         'organik' => 'Organik',

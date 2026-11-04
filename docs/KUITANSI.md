@@ -115,3 +115,18 @@ Pencocokan: form booking mengirim `gclid`, `gbraid`, `wbraid`, `fbclid`, `_fbp`,
 Tenant yang belum punya dataset Meta tetap disiapkan: form booking push `booking_submit` ke dataLayer GTM dengan `event_id` unik (tag Pixel tinggal dipicu event ini), `event_id` yang sama ikut ke CRM untuk dedup Pixel dan CAPI, `_fbp`/`_fbc`/`fbclid` disimpan sejak awal, dan event dicatat di `conversion_events` dengan status menunggu pengaturan. Begitu dataset dan token diisi, event baru langsung terkirim; event lama hanya dikirim kalau masih dalam batas umur yang diterima Meta. Google Ads opsional per tenant.
 
 **Sebelum fase selesai:** `tests/e2e.js` lolos, semua tombol diklik dan console bersih, tampilan HP tanpa geser samping dan tombol minimal 44 px, tidak ada nama tenant atau kunci di repo, backup DB sebelum migrasi.
+
+### Google Ads lewat feed CSV (dipakai sejak Nov 2026)
+
+Tanpa developer token Google Ads API: CRM menyediakan feed `GET /feeds/google-ads/<tenant>.csv` (basic auth,
+username = slug tenant, password dibuat aplikasi di Pengaturan, Kuitansi dan iklan). Google Ads menariknya lewat
+Goals, Conversions, Uploads, Schedules, sumber HTTPS, harian.
+
+- Isi: satu baris per pembayaran yang tidak dibatalkan, 7 hari terakhir. Kolom template "Conversions from clicks"
+  dengan data pengguna (enhanced conversions for leads): Google Click ID (kalau ada), Email dan Phone Number di-hash
+  SHA-256 (HP dinormalkan ke +62...), Conversion Name (dari pengaturan), Conversion Time (+0700), Conversion Value,
+  Conversion Currency IDR, Order ID = nomor kuitansi supaya unggahan harian yang tumpang tindih tidak dobel.
+- Kuitansi yang dibatalkan tidak ikut feed berikutnya, tapi konversi yang sudah terunggah tidak ditarik otomatis.
+- Sebelum dipakai di akun baru: unduh template upload dari akun Google Ads dan cocokkan nama kolomnya dengan feed.
+- Sumber lead `ctwa` tampil sebagai "Meta (IG/FB)": dipakai admin untuk lead WhatsApp yang mengaku dari IG/FB.
+- Tes: `SUPER_PASS=... node tests/e2e-google-ads.js` (DB bersih).
