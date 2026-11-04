@@ -105,13 +105,12 @@ const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
   const lines = body.trim().split('\n');
   check('feed 200 dengan password benar', r.status === 200, String(r.status));
   check('content-type CSV', (r.headers.get('content-type') || '').startsWith('text/csv'));
-  check('baris parameter zona waktu', lines[0] === 'Parameters:TimeZone=Asia/Jakarta');
-  check('header kolom Google', lines[1].includes('"Phone Number"') && lines[1].includes('"Order ID"'));
-  check('satu baris konversi', lines.length === 3, String(lines.length));
+  check('baris pertama langsung judul kolom (Data Manager)', lines[0].startsWith('"Google Click ID"') && lines[0].includes('"Phone Number"') && lines[0].includes('"Order ID"'));
+  check('satu baris konversi', lines.length === 2, String(lines.length));
   check('HP di-hash format E.164', body.includes(sha('+6281234567890')));
   check('nomor HP mentah tidak bocor', !body.includes('81234567890,') && !body.includes('0812'));
-  check('nama konversi, nilai, IDR, order id', lines[2].includes('"Deal CRM"') && lines[2].includes('2500000.00,IDR,' + receipt));
-  check('waktu konversi zona +0700', /\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\+0700/.test(lines[2]));
+  check('nama konversi, nilai, IDR, order id', lines[1].includes('"Deal CRM"') && lines[1].includes('2500000.00,IDR,' + receipt));
+  check('waktu konversi zona +0700', /\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\+0700/.test(lines[1]));
 
   // Akses ditolak
   check('password salah 401', (await feed('klien-iklan', 'klien-iklan', 'salah')).status === 401);
@@ -130,7 +129,7 @@ const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
   // Kuitansi batal tidak masuk feed
   sql('UPDATE payments SET voided_at = UTC_TIMESTAMP(), void_reason = ? WHERE lead_id = ?', ['uji', lead.id]);
   const after = (await (await feed('klien-iklan', 'klien-iklan', pass2)).text()).trim().split('\n');
-  check('kuitansi batal tidak masuk feed', after.length === 2, String(after.length));
+  check('kuitansi batal tidak masuk feed', after.length === 1, String(after.length));
 
   // Tampilan HP
   await page.setViewportSize({ width: 390, height: 844 });

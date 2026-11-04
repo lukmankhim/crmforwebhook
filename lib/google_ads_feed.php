@@ -2,11 +2,12 @@
 declare(strict_types=1);
 
 /**
- * Konversi offline ke Google Ads lewat feed CSV yang ditarik "Scheduled uploads" Google Ads (HTTPS, basic auth),
+ * Konversi offline ke Google Ads lewat feed CSV yang ditarik Data Manager Google Ads (sumber HTTPS, basic auth),
  * jadi tidak perlu developer token Google Ads API. Format: template "Conversions from clicks" dengan data
  * pengguna (enhanced conversions for leads): nomor HP dan email di-hash SHA-256, gclid diisi kalau ada.
  * Satu baris per pembayaran yang tidak dibatalkan, 7 hari terakhir; Order ID = nomor kuitansi supaya unggahan
- * harian yang tumpang tindih tidak menghitung dobel.
+ * harian yang tumpang tindih tidak menghitung dobel. Baris pertama = judul kolom (Data Manager memetakannya),
+ * zona waktu ikut di tiap nilai waktu (+0700), tanpa baris Parameters:TimeZone ala Uploads lama.
  */
 
 const GADS_FEED_DAYS = 7;
@@ -68,7 +69,6 @@ function gads_feed_csv(array $rows): string
 {
     $cols = ['Google Click ID', 'Email', 'Phone Number', 'Conversion Name', 'Conversion Time', 'Conversion Value', 'Conversion Currency', 'Order ID'];
     $out = fopen('php://temp', 'w+');
-    fputcsv($out, ['Parameters:TimeZone=Asia/Jakarta'], ',', '"', '');
     fputcsv($out, $cols, ',', '"', '');
     foreach ($rows as $r) {
         fputcsv($out, array_map(fn($c) => $r[$c], $cols), ',', '"', '');

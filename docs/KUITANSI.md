@@ -120,7 +120,7 @@ Tenant yang belum punya dataset Meta tetap disiapkan: form booking push `booking
 
 Tanpa developer token Google Ads API: CRM menyediakan feed `GET /feeds/google-ads/<tenant>.csv` (basic auth,
 username = slug tenant, password dibuat aplikasi di Pengaturan, Kuitansi dan iklan). Google Ads menariknya lewat
-Goals, Conversions, Uploads, Schedules, sumber HTTPS, harian.
+Tools, Data manager, Connect a product, HTTPS, Conversions (offline), lalu petakan kolomnya. Baris pertama feed = judul kolom.
 
 - Isi: satu baris per pembayaran yang tidak dibatalkan, 7 hari terakhir. Kolom template "Conversions from clicks"
   dengan data pengguna (enhanced conversions for leads): Google Click ID (kalau ada), Email dan Phone Number di-hash

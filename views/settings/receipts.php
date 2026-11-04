@@ -97,7 +97,7 @@ $secretNote = function (string $key) use ($has_secret): string {
   <p class="small">
     <?= $gads_ready ? '<span class="status status--sent">Aktif</span>' : '<span class="status status--waiting_config">Belum diisi</span>' ?>
     Setiap pembayaran 7 hari terakhir masuk ke feed CSV (nomor HP dan email di-hash). Google Ads menariknya sendiri lewat
-    Goals, Conversions, Uploads, Schedules, sumber HTTPS.
+    Tools, Data manager, sumber HTTPS (konversi offline).
   </p>
   <div class="field">
     <label for="gads_conversion_name">Nama konversi</label>
