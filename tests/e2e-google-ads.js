@@ -130,6 +130,9 @@ const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
   sql('UPDATE payments SET voided_at = UTC_TIMESTAMP(), void_reason = ? WHERE lead_id = ?', ['uji', lead.id]);
   const after = (await (await feed('klien-iklan', 'klien-iklan', pass2)).text()).trim().split('\n');
   check('kuitansi batal tidak masuk feed', after.length === 1, String(after.length));
+  sql("INSERT INTO tenant_settings (tenant_id, setting_key, value, is_secret) SELECT id, 'gads_feed_sample', '1', 0 FROM tenants WHERE slug = 'klien-iklan'");
+  const sample = (await (await feed('klien-iklan', 'klien-iklan', pass2)).text()).trim().split('\n');
+  check('baris contoh setup muncul saat feed kosong', sample.length === 2 && sample[1].includes('CONTOH-SKEMA') && sample[1].includes('2000-01-01 00:00:00+0700') && sample[1].includes('0.00,IDR'));
 
   // Tampilan HP
   await page.setViewportSize({ width: 390, height: 844 });

@@ -62,6 +62,21 @@ function gads_feed_rows(): array
             'Order ID' => (string) $r['receipt_no'],
         ];
     }
+    if (!$rows && tenant_setting('gads_feed_sample') === '1') {
+        // Data Manager butuh minimal satu baris untuk menebak skema saat koneksi dibuat. Baris ini tidak bisa jadi
+        // konversi: tanggal tahun 2000 (di luar jendela 90 hari), nilai 0, HP kosong yang tidak cocok dengan siapa pun.
+        // Nyalakan hanya saat setup: php -r ... tenant_setting_set('gads_feed_sample', '1'), lalu kosongkan lagi.
+        $rows[] = [
+            'Google Click ID' => '',
+            'Email' => '',
+            'Phone Number' => gads_phone_hash('+620000000000'),
+            'Conversion Name' => $name,
+            'Conversion Time' => '2000-01-01 00:00:00+0700',
+            'Conversion Value' => '0.00',
+            'Conversion Currency' => 'IDR',
+            'Order ID' => 'CONTOH-SKEMA',
+        ];
+    }
     return $rows;
 }
 
